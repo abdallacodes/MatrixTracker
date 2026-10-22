@@ -70,6 +70,17 @@ class MatrixViewModel(
                 val taskProgress = calculateTaskCompletion(tasks, periods, cellsMap)
                 val periodProgress = calculatePeriodCompletion(tasks, periods, cellsMap)
 
+                val elapsedPeriods = getElapsedPeriods(periods)
+                val overallProgress = calculateOverallCompletion(tasks, elapsedPeriods, cellsMap)
+                val bestHabit = getBestPerformingHabit(tasks, taskProgress)
+                val streak = calculateMaxStreak(tasks, periods, cellsMap)
+
+                val taskStreaksMap = tasks.associate { task ->
+                    task.id to com.tracker.matrixtracker.util.AnalyticsUtils.calculateCurrentStreak(task.id, periods, cellsMap)
+                }
+                val overallConsistency = com.tracker.matrixtracker.util.AnalyticsUtils.calculateOverallConsistency(tasks, periods, cellsMap)
+                val bestDay = com.tracker.matrixtracker.util.AnalyticsUtils.calculateBestDayOfWeek(tasks, periods, cellsMap)
+
                 MatrixUiState(
                     isLoading = false,
                     currentBoard = currentBoard,
@@ -80,7 +91,13 @@ class MatrixViewModel(
                     selectedYearMonth = selectedYearMonth,
                     selectedYear = selectedYear,
                     taskCompletionPercentage = taskProgress,
-                    periodCompletionPercentage = periodProgress
+                    periodCompletionPercentage = periodProgress,
+                    overallCompletionPercentage = overallProgress,
+                    bestPerformingHabit = bestHabit,
+                    currentStreakDays = streak,
+                    taskStreaks = taskStreaksMap,
+                    overallConsistencyPercent = overallConsistency,
+                    bestDayOfWeek = bestDay
                 )
             }
         }
@@ -159,6 +176,37 @@ class MatrixViewModel(
         }
     }
 
+    fun batchMarkCells(taskId: Long, periodKeys: List<String>, status: CellStatus) {
+        if (periodKeys.isEmpty()) return
+        viewModelScope.launch {
+            repository.batchSetCellStatus(taskId, periodKeys, status)
+        }
+    }
+
+    fun markAllHabitsForPeriod(periodKey: String, status: CellStatus) {
+        viewModelScope.launch {
+            repository.markAllHabitsForPeriod(periodKey, status, uiState.value.tasks)
+        }
+    }
+
+    fun clearPeriod(periodKey: String) {
+        viewModelScope.launch {
+            repository.clearPeriod(periodKey)
+        }
+    }
+
+    fun markTaskRecentDays(taskId: Long, daysCount: Int, status: CellStatus) {
+        viewModelScope.launch {
+            val periods = uiState.value.periods
+            if (periods.isEmpty()) return@launch
+            val currentIndex = periods.indexOfFirst { it.isCurrent }
+            val endIndex = if (currentIndex >= 0) currentIndex else periods.lastIndex
+            val startIndex = (endIndex - (daysCount - 1)).coerceAtLeast(0)
+            val selectedKeys = periods.subList(startIndex, endIndex + 1).map { it.key }
+            repository.batchSetCellStatus(taskId, selectedKeys, status)
+        }
+    }
+
     fun previousPeriod() {
         val board = uiState.value.currentBoard ?: return
         when (board.cadence) {
@@ -222,6 +270,48 @@ class MatrixViewModel(
         com.tracker.matrixtracker.util.ShareUtils.shareTextAsFile(context, filename, csvText, "text/csv")
     }
 
+    fun printCurrentBoard(context: android.content.Context) {
+        val board = uiState.value.currentBoard ?: return
+        val periodTitle = getFormattedPeriodTitle()
+        com.tracker.matrixtracker.util.PdfExportUtils.printBoard(
+            context = context,
+            board = board,
+            tasks = uiState.value.tasks,
+            periods = uiState.value.periods,
+            cells = uiState.value.cells,
+            taskCompletionPercentage = uiState.value.taskCompletionPercentage,
+            periodCompletionPercentage = uiState.value.periodCompletionPercentage,
+            overallCompletionPercentage = uiState.value.overallCompletionPercentage,
+            periodTitle = periodTitle
+        )
+    }
+
+    fun shareBoardAsPdf(context: android.content.Context) {
+        val board = uiState.value.currentBoard ?: return
+        val periodTitle = getFormattedPeriodTitle()
+        val pdfBytes = com.tracker.matrixtracker.util.PdfExportUtils.exportPdfToBytes(
+            board = board,
+            tasks = uiState.value.tasks,
+            periods = uiState.value.periods,
+            cells = uiState.value.cells,
+            taskCompletionPercentage = uiState.value.taskCompletionPercentage,
+            periodCompletionPercentage = uiState.value.periodCompletionPercentage,
+            overallCompletionPercentage = uiState.value.overallCompletionPercentage,
+            periodTitle = periodTitle
+        )
+        val sanitizedTitle = board.title.replace(Regex("[^a-zA-Z0-9_-]"), "_")
+        val filename = "${sanitizedTitle}_matrix.pdf"
+        com.tracker.matrixtracker.util.ShareUtils.shareFile(context, filename, pdfBytes, "application/pdf")
+    }
+
+    private fun getFormattedPeriodTitle(): String {
+        val board = uiState.value.currentBoard ?: return ""
+        return when (board.cadence) {
+            BoardCadence.DAILY -> _selectedYearMonth.value.format(java.time.format.DateTimeFormatter.ofPattern("MMMM yyyy", java.util.Locale.US))
+            BoardCadence.WEEKLY, BoardCadence.MONTHLY -> "${_selectedYear.value}"
+        }
+    }
+
     fun createFullBackup(context: android.content.Context) {
         viewModelScope.launch {
             val boards = repository.getBoards().first()
@@ -256,18 +346,29 @@ class MatrixViewModel(
         }
     }
 
+    private fun getElapsedPeriods(periods: List<PeriodHeader>): List<PeriodHeader> {
+        if (periods.isEmpty()) return emptyList()
+        val currentIndex = periods.indexOfFirst { it.isCurrent }
+        return if (currentIndex >= 0) {
+            periods.take(currentIndex + 1)
+        } else {
+            periods
+        }
+    }
+
     private fun calculateTaskCompletion(
         tasks: List<Task>,
         periods: List<PeriodHeader>,
         cells: Map<Pair<Long, String>, CellEntry>
     ): Map<Long, Float> {
-        if (periods.isEmpty()) return emptyMap()
-        val totalPeriods = periods.size.toFloat()
+        val elapsed = getElapsedPeriods(periods)
+        if (elapsed.isEmpty()) return emptyMap()
+        val totalElapsed = elapsed.size.toFloat()
         return tasks.associate { task ->
-            val doneCount = periods.count { period ->
+            val doneCount = elapsed.count { period ->
                 cells[Pair(task.id, period.key)]?.status == CellStatus.DONE
             }
-            task.id to ((doneCount / totalPeriods) * 100f)
+            task.id to ((doneCount / totalElapsed) * 100f)
         }
     }
 
@@ -284,5 +385,56 @@ class MatrixViewModel(
             }
             period.key to ((doneCount / totalTasks) * 100f)
         }
+    }
+
+    private fun calculateOverallCompletion(
+        tasks: List<Task>,
+        elapsedPeriods: List<PeriodHeader>,
+        cells: Map<Pair<Long, String>, CellEntry>
+    ): Float {
+        if (tasks.isEmpty() || elapsedPeriods.isEmpty()) return 0f
+        val totalPossible = (tasks.size * elapsedPeriods.size).toFloat()
+        val doneCount = tasks.sumOf { task ->
+            elapsedPeriods.count { period ->
+                cells[Pair(task.id, period.key)]?.status == CellStatus.DONE
+            }
+        }
+        return (doneCount / totalPossible) * 100f
+    }
+
+    private fun getBestPerformingHabit(
+        tasks: List<Task>,
+        taskCompletion: Map<Long, Float>
+    ): String? {
+        if (tasks.isEmpty()) return null
+        val bestTask = tasks.maxByOrNull { taskCompletion[it.id] ?: 0f } ?: return null
+        val bestRate = taskCompletion[bestTask.id] ?: 0f
+        return if (bestRate > 0f) bestTask.title else null
+    }
+
+    private fun calculateMaxStreak(
+        tasks: List<Task>,
+        periods: List<PeriodHeader>,
+        cells: Map<Pair<Long, String>, CellEntry>
+    ): Int {
+        if (tasks.isEmpty() || periods.isEmpty()) return 0
+        val currentIndex = periods.indexOfFirst { it.isCurrent }
+        val relevantPeriods = if (currentIndex >= 0) {
+            periods.take(currentIndex + 1).reversed()
+        } else {
+            periods.reversed()
+        }
+
+        return tasks.maxOfOrNull { task ->
+            var streak = 0
+            for (period in relevantPeriods) {
+                if (cells[Pair(task.id, period.key)]?.status == CellStatus.DONE) {
+                    streak++
+                } else {
+                    break
+                }
+            }
+            streak
+        } ?: 0
     }
 }

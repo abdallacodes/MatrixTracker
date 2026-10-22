@@ -23,4 +23,10 @@ data class MatrixUiState(
     val selectedYear: Int = YearMonth.now().year,
     val taskCompletionPercentage: Map<Long, Float> = emptyMap(),
     val periodCompletionPercentage: Map<String, Float> = emptyMap(),
+    val overallCompletionPercentage: Float = 0f,
+    val bestPerformingHabit: String? = null,
+    val currentStreakDays: Int = 0,
+    val taskStreaks: Map<Long, Int> = emptyMap(),
+    val overallConsistencyPercent: Int = 0,
+    val bestDayOfWeek: Pair<String, Int>? = null,
 )

@@ -1,9 +1,9 @@
 package com.tracker.matrixtracker.ui.components
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -14,16 +14,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.tracker.matrixtracker.domain.model.CellEntry
 import com.tracker.matrixtracker.domain.model.CellStatus
 
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
-
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun MatrixStatusCell(
     entry: CellEntry?,
@@ -32,37 +30,78 @@ fun MatrixStatusCell(
     modifier: Modifier = Modifier,
 ) {
     val haptic = LocalHapticFeedback.current
+    val isDark = isSystemInDarkTheme()
     val status = entry?.status ?: CellStatus.EMPTY
     val hasNote = !entry?.note.isNullOrBlank()
 
-    val (bgColor, textColor, textSymbol) = when (status) {
-        CellStatus.EMPTY -> Triple(
-            MaterialTheme.colorScheme.surface,
-            MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
-            ""
-        )
-        CellStatus.DONE -> Triple(
-            Color(0xFFE8F5E9),
-            Color(0xFF2E7D32),
-            "✓"
-        )
-        CellStatus.FAILED -> Triple(
-            Color(0xFFFFEBEE),
-            Color(0xFFC62828),
-            "✕"
-        )
-        CellStatus.SKIPPED -> Triple(
-            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
-            MaterialTheme.colorScheme.onSurfaceVariant,
-            "—"
-        )
+    val (bgColor, borderColor, textColor, textSymbol) = when (status) {
+        CellStatus.EMPTY -> if (isDark) {
+            Quadruple(
+                MaterialTheme.colorScheme.surface,
+                MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f),
+                MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+                ""
+            )
+        } else {
+            Quadruple(
+                MaterialTheme.colorScheme.surface,
+                MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f),
+                MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+                ""
+            )
+        }
+        CellStatus.DONE -> if (isDark) {
+            Quadruple(
+                Color(0xFF133820),
+                Color(0xFF2E7D32).copy(alpha = 0.5f),
+                Color(0xFF81C784),
+                "✓"
+            )
+        } else {
+            Quadruple(
+                Color(0xFFE8F5E9),
+                Color(0xFFA5D6A7),
+                Color(0xFF2E7D32),
+                "✓"
+            )
+        }
+        CellStatus.FAILED -> if (isDark) {
+            Quadruple(
+                Color(0xFF381515),
+                Color(0xFFC62828).copy(alpha = 0.5f),
+                Color(0xFFE57373),
+                "✕"
+            )
+        } else {
+            Quadruple(
+                Color(0xFFFFEBEE),
+                Color(0xFFEF9A9A),
+                Color(0xFFC62828),
+                "✕"
+            )
+        }
+        CellStatus.SKIPPED -> if (isDark) {
+            Quadruple(
+                Color(0xFF1E2836),
+                Color(0xFF37474F).copy(alpha = 0.5f),
+                Color(0xFF90A4AE),
+                "—"
+            )
+        } else {
+            Quadruple(
+                Color(0xFFECEFF1),
+                Color(0xFFCFD8DC),
+                Color(0xFF607D8B),
+                "—"
+            )
+        }
     }
 
     Box(
         modifier = modifier
             .size(width = 48.dp, height = 44.dp)
             .background(bgColor)
-            .border(0.5.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+            .border(0.5.dp, borderColor)
             .combinedClickable(
                 onClick = {
                     haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
@@ -95,3 +134,10 @@ fun MatrixStatusCell(
         }
     }
 }
+
+private data class Quadruple<A, B, C, D>(
+    val first: A,
+    val second: B,
+    val third: C,
+    val fourth: D
+)

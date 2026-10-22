@@ -33,4 +33,31 @@ object ShareUtils {
             context.startActivity(chooserIntent)
         }
     }
+
+    fun shareFile(
+        context: Context,
+        filename: String,
+        fileData: ByteArray,
+        mimeType: String
+    ) {
+        runCatching {
+            val file = File(context.cacheDir, filename)
+            file.writeBytes(fileData)
+
+            val authority = "${context.packageName}.fileprovider"
+            val uri = FileProvider.getUriForFile(context, authority, file)
+
+            val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                type = mimeType
+                putExtra(Intent.EXTRA_STREAM, uri)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+
+            val chooserIntent = Intent.createChooser(shareIntent, "Share File").apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+
+            context.startActivity(chooserIntent)
+        }
+    }
 }

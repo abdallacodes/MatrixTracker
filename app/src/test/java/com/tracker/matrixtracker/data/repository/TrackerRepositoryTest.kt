@@ -70,6 +70,22 @@ class TrackerRepositoryTest {
     }
 
     @Test
+    fun batchSetCellStatus_upsertsAndClearsMultipleCells() = runBlocking {
+        val boardId = repository.saveBoard(Board(title = "Board", cadence = BoardCadence.DAILY))
+        val taskId = repository.saveTask(Task(boardId = boardId, title = "Task", sortOrder = 0))
+        val periodKeys = listOf("2026-10-20", "2026-10-21", "2026-10-22")
+
+        repository.batchSetCellStatus(taskId, periodKeys, CellStatus.DONE)
+        var entries = repository.getCellEntries(listOf(taskId), periodKeys).first()
+        assertEquals(3, entries.size)
+        assertTrue(entries.all { it.status == CellStatus.DONE })
+
+        repository.batchSetCellStatus(taskId, periodKeys, CellStatus.EMPTY)
+        entries = repository.getCellEntries(listOf(taskId), periodKeys).first()
+        assertTrue(entries.isEmpty())
+    }
+
+    @Test
     fun updateTaskOrder() = runBlocking {
         val boardId = repository.saveBoard(Board(title = "Board", cadence = BoardCadence.DAILY))
         repository.saveTask(Task(boardId = boardId, title = "Task 1", sortOrder = 0))

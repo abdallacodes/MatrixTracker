@@ -25,6 +25,17 @@ interface TrackerRepository {
         status: CellStatus,
         note: String? = null
     )
+    suspend fun batchSetCellStatus(
+        taskId: Long,
+        periodKeys: List<String>,
+        status: CellStatus
+    )
+    suspend fun markAllHabitsForPeriod(
+        periodKey: String,
+        status: CellStatus,
+        tasks: List<Task>
+    )
+    suspend fun clearPeriod(periodKey: String)
     suspend fun toggleCellStatus(
         taskId: Long,
         periodKey: String,

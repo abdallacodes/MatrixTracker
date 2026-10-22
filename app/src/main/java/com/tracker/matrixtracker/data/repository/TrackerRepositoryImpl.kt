@@ -95,6 +95,54 @@ class TrackerRepositoryImpl(
         }
     }
 
+    override suspend fun batchSetCellStatus(
+        taskId: Long,
+        periodKeys: List<String>,
+        status: CellStatus
+    ) {
+        if (periodKeys.isEmpty()) return
+        if (status == CellStatus.EMPTY) {
+            cellEntryDao.deleteCellEntries(taskId, periodKeys)
+        } else {
+            val now = System.currentTimeMillis()
+            val entities = periodKeys.map { periodKey ->
+                CellEntryEntity(
+                    taskId = taskId,
+                    periodKey = periodKey,
+                    status = status,
+                    updatedAt = now
+                )
+            }
+            cellEntryDao.upsertCellEntries(entities)
+        }
+    }
+
+    override suspend fun markAllHabitsForPeriod(
+        periodKey: String,
+        status: CellStatus,
+        tasks: List<Task>
+    ) {
+        if (tasks.isEmpty()) return
+        if (status == CellStatus.EMPTY) {
+            cellEntryDao.deleteCellEntriesForPeriod(periodKey)
+        } else {
+            val now = System.currentTimeMillis()
+            val entities = tasks.map { task ->
+                CellEntryEntity(
+                    taskId = task.id,
+                    periodKey = periodKey,
+                    status = status,
+                    updatedAt = now
+                )
+            }
+            cellEntryDao.upsertCellEntries(entities)
+        }
+    }
+
+    override suspend fun clearPeriod(periodKey: String) {
+        cellEntryDao.deleteCellEntriesForPeriod(periodKey)
+    }
+
     override suspend fun toggleCellStatus(
         taskId: Long,
         periodKey: String,

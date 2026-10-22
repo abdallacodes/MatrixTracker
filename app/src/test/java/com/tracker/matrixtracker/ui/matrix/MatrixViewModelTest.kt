@@ -151,4 +151,37 @@ class MatrixViewModelTest {
 
         job.cancel()
     }
+
+    @Test
+    fun batchCellOperations_markAllHabitsAndRecentDays() = runBlocking {
+        val job = launch(testDispatcher) { viewModel.uiState.collect {} }
+
+        val initialState = viewModel.uiState.first { !it.isLoading && it.tasks.isNotEmpty() }
+        val periodKey = initialState.periods.first().key
+
+        viewModel.markAllHabitsForPeriod(periodKey, CellStatus.DONE)
+        val stateAfterMarkAll = viewModel.uiState.first { state ->
+            state.tasks.all { task -> state.cells[Pair(task.id, periodKey)]?.status == CellStatus.DONE }
+        }
+        assertTrue(stateAfterMarkAll.tasks.all { task ->
+            stateAfterMarkAll.cells[Pair(task.id, periodKey)]?.status == CellStatus.DONE
+        })
+
+        viewModel.clearPeriod(periodKey)
+        val stateAfterClear = viewModel.uiState.first { state ->
+            state.tasks.all { task -> state.cells[Pair(task.id, periodKey)] == null }
+        }
+        assertTrue(stateAfterClear.tasks.all { task ->
+            stateAfterClear.cells[Pair(task.id, periodKey)] == null
+        })
+
+        val firstTask = initialState.tasks.first()
+        viewModel.markTaskRecentDays(firstTask.id, 7, CellStatus.DONE)
+        val stateAfterRecent = viewModel.uiState.first { state ->
+            state.cells.count { it.key.first == firstTask.id && it.value.status == CellStatus.DONE } >= 1
+        }
+        assertTrue(stateAfterRecent.cells.any { it.key.first == firstTask.id && it.value.status == CellStatus.DONE })
+
+        job.cancel()
+    }
 }

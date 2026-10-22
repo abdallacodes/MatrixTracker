@@ -12,6 +12,9 @@ interface CellEntryDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertCellEntry(entry: CellEntryEntity): Long
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsertCellEntries(entries: List<CellEntryEntity>)
+
     @Query("SELECT * FROM cell_entries WHERE taskId IN (:taskIds) AND periodKey IN (:periodKeys)")
     fun getCellEntriesForTasksAndPeriods(
         taskIds: List<Long>,
@@ -23,4 +26,10 @@ interface CellEntryDao {
 
     @Query("DELETE FROM cell_entries WHERE taskId = :taskId AND periodKey = :periodKey")
     suspend fun deleteCellEntry(taskId: Long, periodKey: String)
+
+    @Query("DELETE FROM cell_entries WHERE taskId = :taskId AND periodKey IN (:periodKeys)")
+    suspend fun deleteCellEntries(taskId: Long, periodKeys: List<String>)
+
+    @Query("DELETE FROM cell_entries WHERE periodKey = :periodKey")
+    suspend fun deleteCellEntriesForPeriod(periodKey: String)
 }

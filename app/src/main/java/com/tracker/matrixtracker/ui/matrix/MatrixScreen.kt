@@ -35,9 +35,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import com.tracker.matrixtracker.domain.model.Board
 import com.tracker.matrixtracker.domain.model.Task
 import com.tracker.matrixtracker.ui.components.BoardSelectionBottomSheet
+import com.tracker.matrixtracker.ui.components.ConsistencyDashboard
 import com.tracker.matrixtracker.ui.components.CreateBoardDialog
 import com.tracker.matrixtracker.ui.components.TaskManagementDialog
 import com.tracker.matrixtracker.ui.matrix.components.MatrixGrid
@@ -121,6 +124,22 @@ fun MatrixScreen(
                             )
 
                             DropdownMenuItem(
+                                text = { Text("Print / Save as PDF") },
+                                onClick = {
+                                    isOverflowMenuExpanded = false
+                                    viewModel.printCurrentBoard(context)
+                                }
+                            )
+
+                            DropdownMenuItem(
+                                text = { Text("Share PDF") },
+                                onClick = {
+                                    isOverflowMenuExpanded = false
+                                    viewModel.shareBoardAsPdf(context)
+                                }
+                            )
+
+                            DropdownMenuItem(
                                 text = { Text("Backup All Data (JSON)") },
                                 onClick = {
                                     isOverflowMenuExpanded = false
@@ -177,22 +196,39 @@ fun MatrixScreen(
                     CircularProgressIndicator()
                 }
             } else {
-                MatrixGrid(
-                    tasks = uiState.tasks,
-                    periods = uiState.periods,
-                    cells = uiState.cells,
-                    taskCompletionPercentage = uiState.taskCompletionPercentage,
-                    periodCompletionPercentage = uiState.periodCompletionPercentage,
-                    onToggleCell = viewModel::toggleCell,
-                    onCellLongClick = { taskId, periodKey ->
-                        val existingNote = uiState.cells[Pair(taskId, periodKey)]?.note ?: ""
-                        selectedCellForNote = Pair(taskId, periodKey)
-                        noteText = existingNote
-                    },
-                    onTaskLongClick = { task ->
-                        selectedTaskForAction = task
-                    }
-                )
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    MatrixGrid(
+                        tasks = uiState.tasks,
+                        periods = uiState.periods,
+                        cells = uiState.cells,
+                        taskCompletionPercentage = uiState.taskCompletionPercentage,
+                        periodCompletionPercentage = uiState.periodCompletionPercentage,
+                        onToggleCell = viewModel::toggleCell,
+                        onBatchMarkCells = viewModel::batchMarkCells,
+                        onMarkAllHabitsForPeriod = viewModel::markAllHabitsForPeriod,
+                        onClearPeriod = viewModel::clearPeriod,
+                        onMarkTaskRecentDays = viewModel::markTaskRecentDays,
+                        onCellLongClick = { taskId, periodKey ->
+                            val existingNote = uiState.cells[Pair(taskId, periodKey)]?.note ?: ""
+                            selectedCellForNote = Pair(taskId, periodKey)
+                            noteText = existingNote
+                        },
+                        onTaskLongClick = { task ->
+                            selectedTaskForAction = task
+                        }
+                    )
+
+                    ConsistencyDashboard(
+                        overallConsistencyPercent = uiState.overallConsistencyPercent,
+                        bestDayOfWeek = uiState.bestDayOfWeek,
+                        tasks = uiState.tasks,
+                        taskStreaks = uiState.taskStreaks
+                    )
+                }
             }
         }
     }
