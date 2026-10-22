@@ -10,6 +10,7 @@ import com.tracker.matrixtracker.domain.model.CellStatus
 import com.tracker.matrixtracker.domain.model.Task
 import com.tracker.matrixtracker.domain.repository.TrackerRepository
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 
@@ -92,6 +93,18 @@ class TrackerRepositoryImpl(
                 updatedAt = System.currentTimeMillis()
             )
             cellEntryDao.upsertCellEntry(entity)
+        }
+    }
+
+    override suspend fun clearCellNote(taskId: Long, periodKey: String) {
+        val existingList = cellEntryDao.getCellEntriesForTasksAndPeriods(listOf(taskId), listOf(periodKey)).first()
+        val existing = existingList.firstOrNull()
+        if (existing != null) {
+            if (existing.status == CellStatus.EMPTY) {
+                cellEntryDao.deleteCellEntry(taskId, periodKey)
+            } else {
+                cellEntryDao.upsertCellEntry(existing.copy(note = null, updatedAt = System.currentTimeMillis()))
+            }
         }
     }
 

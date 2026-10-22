@@ -204,4 +204,27 @@ class MatrixViewModelTest {
 
         job.cancel()
     }
+
+    @Test
+    fun cellNoteOperations_setAndClearCellNote() = runTest(testDispatcher) {
+        val job = backgroundScope.launch { viewModel.uiState.collect {} }
+
+        val initialState = viewModel.uiState.first { !it.isLoading && it.tasks.isNotEmpty() }
+        val firstTask = initialState.tasks.first()
+        val periodKey = initialState.periods.first().key
+
+        viewModel.setCellNote(firstTask.id, periodKey, "Drink 2L Water Before 12PM")
+        val stateWithNote = viewModel.uiState.first { state ->
+            state.cells[Pair(firstTask.id, periodKey)]?.note == "Drink 2L Water Before 12PM"
+        }
+        assertEquals("Drink 2L Water Before 12PM", stateWithNote.cells[Pair(firstTask.id, periodKey)]?.note)
+
+        viewModel.deleteCellNote(firstTask.id, periodKey)
+        val stateAfterDeleteNote = viewModel.uiState.first { state ->
+            state.cells[Pair(firstTask.id, periodKey)]?.note.isNullOrBlank()
+        }
+        assertTrue(stateAfterDeleteNote.cells[Pair(firstTask.id, periodKey)]?.note.isNullOrBlank())
+
+        job.cancel()
+    }
 }

@@ -25,6 +25,7 @@ interface TrackerRepository {
         status: CellStatus,
         note: String? = null
     )
+    suspend fun clearCellNote(taskId: Long, periodKey: String)
     suspend fun batchSetCellStatus(
         taskId: Long,
         periodKeys: List<String>,

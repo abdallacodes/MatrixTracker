@@ -227,6 +227,12 @@ class MatrixViewModel(
         }
     }
 
+    fun deleteCellNote(taskId: Long, periodKey: String) {
+        viewModelScope.launch {
+            repository.clearCellNote(taskId, periodKey)
+        }
+    }
+
     fun batchMarkCells(taskId: Long, periodKeys: List<String>, status: CellStatus) {
         if (periodKeys.isEmpty()) return
         viewModelScope.launch {

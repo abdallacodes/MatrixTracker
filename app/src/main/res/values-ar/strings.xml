@@ -29,6 +29,10 @@
     <string name="done">تم</string>
     <string name="add_task">إضافة عادة جديدة</string>
     <string name="edit_task">تعديل المهمة</string>
+    <string name="add_note">إضافة ملاحظة</string>
+    <string name="edit_note">تعديل الملاحظة</string>
+    <string name="delete_note">حذف الملاحظة</string>
+    <string name="cell_note">ملاحظة الخلية</string>
     <string name="task_name">اسم المهمة</string>
     <string name="rename">إعادة تسمية</string>
     <string name="manage_tasks">إدارة المهام</string>

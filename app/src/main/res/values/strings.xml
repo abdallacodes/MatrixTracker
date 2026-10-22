@@ -29,6 +29,10 @@
     <string name="done">Done</string>
     <string name="add_task">Add New Habit</string>
     <string name="edit_task">Edit Task</string>
+    <string name="add_note">Add Note</string>
+    <string name="edit_note">Edit Note</string>
+    <string name="delete_note">Delete Note</string>
+    <string name="cell_note">Cell Note</string>
     <string name="task_name">Task Name</string>
     <string name="rename">Rename</string>
     <string name="manage_tasks">Manage Tasks</string>

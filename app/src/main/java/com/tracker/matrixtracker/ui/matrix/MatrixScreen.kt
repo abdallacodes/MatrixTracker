@@ -47,6 +47,7 @@ import com.tracker.matrixtracker.R
 import com.tracker.matrixtracker.domain.model.Board
 import com.tracker.matrixtracker.domain.model.Task
 import com.tracker.matrixtracker.ui.components.BoardSelectionBottomSheet
+import com.tracker.matrixtracker.ui.components.CellNoteDialog
 import com.tracker.matrixtracker.ui.components.ConsistencyDashboard
 import com.tracker.matrixtracker.ui.components.CreateBoardDialog
 import com.tracker.matrixtracker.ui.components.EditTaskDialog
@@ -124,7 +125,13 @@ fun MatrixScreen(
                     taskCompletionPercentage = uiState.taskCompletionPercentage,
                     periodCompletionPercentage = uiState.periodCompletionPercentage,
                     dragGestureEnabled = settingsState.dragGestureEnabled,
-                    onToggleCell = viewModel::toggleCell,
+                    onToggleCell = { taskId, periodKey ->
+                        val existingNote = uiState.cells[Pair(taskId, periodKey)]?.note
+                        if (!existingNote.isNullOrBlank()) {
+                            android.widget.Toast.makeText(context, "Note: $existingNote", android.widget.Toast.LENGTH_SHORT).show()
+                        }
+                        viewModel.toggleCell(taskId, periodKey)
+                    },
                     onBatchMarkCells = viewModel::batchMarkCells,
                     onMarkAllHabitsForPeriod = viewModel::markAllHabitsForPeriod,
                     onClearPeriod = viewModel::clearPeriod,
@@ -282,7 +289,13 @@ fun MatrixScreen(
                             taskCompletionPercentage = uiState.taskCompletionPercentage,
                             periodCompletionPercentage = uiState.periodCompletionPercentage,
                             dragGestureEnabled = settingsState.dragGestureEnabled,
-                            onToggleCell = viewModel::toggleCell,
+                            onToggleCell = { taskId, periodKey ->
+                                val existingNote = uiState.cells[Pair(taskId, periodKey)]?.note
+                                if (!existingNote.isNullOrBlank()) {
+                                    android.widget.Toast.makeText(context, "Note: $existingNote", android.widget.Toast.LENGTH_SHORT).show()
+                                }
+                                viewModel.toggleCell(taskId, periodKey)
+                            },
                             onBatchMarkCells = viewModel::batchMarkCells,
                             onMarkAllHabitsForPeriod = viewModel::markAllHabitsForPeriod,
                             onClearPeriod = viewModel::clearPeriod,
@@ -483,32 +496,17 @@ fun MatrixScreen(
     }
 
     selectedCellForNote?.let { (taskId, periodKey) ->
-        AlertDialog(
-            onDismissRequest = { selectedCellForNote = null },
-            title = { Text("Cell Note ($periodKey)") },
-            text = {
-                OutlinedTextField(
-                    value = noteText,
-                    onValueChange = { noteText = it },
-                    label = { Text("Note (optional)") },
-                    modifier = Modifier.fillMaxWidth()
-                )
+        val existingNote = uiState.cells[Pair(taskId, periodKey)]?.note ?: ""
+        CellNoteDialog(
+            periodKey = periodKey,
+            initialNote = existingNote,
+            onSaveNote = { note ->
+                viewModel.setCellNote(taskId, periodKey, note)
             },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        viewModel.setCellNote(taskId, periodKey, noteText)
-                        selectedCellForNote = null
-                    }
-                ) {
-                    Text("Save")
-                }
+            onDeleteNote = {
+                viewModel.deleteCellNote(taskId, periodKey)
             },
-            dismissButton = {
-                TextButton(onClick = { selectedCellForNote = null }) {
-                    Text("Cancel")
-                }
-            }
+            onDismiss = { selectedCellForNote = null }
         )
     }
 }
