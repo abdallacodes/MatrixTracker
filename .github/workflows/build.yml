@@ -31,26 +31,31 @@ jobs:
           distribution: 'temurin'
           cache: 'gradle'
 
+      - name: Setup Keystore
+        run: |
+          mkdir -p ~/.android
+          keytool -genkey -v -keystore ~/.android/debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
+
       - name: Make Gradlew Executable
         run: chmod +x gradlew
 
       - name: Run Unit Tests
         run: ./gradlew test --stacktrace
 
-      - name: Build Debug APK
-        run: ./gradlew assembleDebug --stacktrace
+      - name: Build Release APK
+        run: ./gradlew assembleRelease --stacktrace
 
-      - name: Upload Debug APK Artifact
+      - name: Upload Release APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: MatrixTracker-Debug-APK
-          path: app/build/outputs/apk/debug/app-debug.apk
+          name: MatrixTracker-Release-APK
+          path: app/build/outputs/apk/release/app-release.apk
 
       - name: Create GitHub Release
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
-          files: app/build/outputs/apk/debug/app-debug.apk
+          files: app/build/outputs/apk/release/app-release.apk
           name: MatrixTracker ${{ github.ref_name }}
           tag_name: ${{ github.ref_name }}
           draft: false
