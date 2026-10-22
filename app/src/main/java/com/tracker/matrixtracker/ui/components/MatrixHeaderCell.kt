@@ -7,7 +7,10 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
@@ -36,9 +39,9 @@ fun MatrixHeaderCell(
     var isMenuExpanded by remember { mutableStateOf(false) }
 
     val bgColor = if (header.isCurrent) {
-        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f)
+        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.65f)
     } else {
-        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
     }
 
     val borderColor = if (header.isCurrent) {
@@ -67,6 +70,16 @@ fun MatrixHeaderCell(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
+            if (header.isCurrent) {
+                Box(
+                    modifier = Modifier
+                        .padding(top = 2.dp)
+                        .width(16.dp)
+                        .size(3.dp)
+                        .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(2.dp))
+                )
+            }
+
             Text(
                 text = header.label,
                 fontSize = 11.sp,
