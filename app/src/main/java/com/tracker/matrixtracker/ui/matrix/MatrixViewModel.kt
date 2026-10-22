@@ -410,6 +410,76 @@ class MatrixViewModel(
         }
     }
 
+    suspend fun exportDataToJson(outputStream: java.io.OutputStream): Result<Unit> {
+        return kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            runCatching {
+                val boards = repository.getBoards().first()
+                val allTasks = mutableListOf<Task>()
+                boards.forEach { b ->
+                    allTasks.addAll(repository.getTasksForBoard(b.id).first())
+                }
+                val allEntries = repository.getAllCellEntries().first()
+
+                val jsonText = com.tracker.matrixtracker.util.MatrixExportUtils.exportFullBackupJson(boards, allTasks, allEntries)
+                outputStream.use { stream ->
+                    stream.write(jsonText.toByteArray(Charsets.UTF_8))
+                }
+            }
+        }
+    }
+
+    suspend fun importDataFromJson(inputStream: java.io.InputStream): Result<Unit> {
+        return kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            runCatching {
+                val jsonString = inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
+                val bundle = com.tracker.matrixtracker.util.MatrixExportUtils.parseBackupJson(jsonString)
+                    ?: throw IllegalArgumentException("Invalid backup format")
+
+                bundle.boards.forEach { board ->
+                    repository.saveBoard(board)
+                }
+                bundle.tasks.forEach { task ->
+                    repository.saveTask(task)
+                }
+                bundle.entries.forEach { entry ->
+                    repository.setCellStatus(entry.taskId, entry.periodKey, entry.status, entry.note)
+                }
+
+                if (bundle.boards.isNotEmpty()) {
+                    _selectedBoardId.value = bundle.boards.first().id
+                }
+            }
+        }
+    }
+
+    fun exportBackupToUri(context: android.content.Context, uri: android.net.Uri) {
+        viewModelScope.launch {
+            val outputStream = context.contentResolver.openOutputStream(uri)
+            if (outputStream != null) {
+                val result = exportDataToJson(outputStream)
+                if (result.isSuccess) {
+                    android.widget.Toast.makeText(context, context.getString(com.tracker.matrixtracker.R.string.backup_exported_success), android.widget.Toast.LENGTH_SHORT).show()
+                } else {
+                    android.widget.Toast.makeText(context, context.getString(com.tracker.matrixtracker.R.string.invalid_backup_file), android.widget.Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+    fun restoreBackupFromUri(context: android.content.Context, uri: android.net.Uri) {
+        viewModelScope.launch {
+            val inputStream = context.contentResolver.openInputStream(uri)
+            if (inputStream != null) {
+                val result = importDataFromJson(inputStream)
+                if (result.isSuccess) {
+                    android.widget.Toast.makeText(context, context.getString(com.tracker.matrixtracker.R.string.data_restored_success), android.widget.Toast.LENGTH_SHORT).show()
+                } else {
+                    android.widget.Toast.makeText(context, context.getString(com.tracker.matrixtracker.R.string.invalid_backup_file), android.widget.Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
     private fun getElapsedPeriods(periods: List<PeriodHeader>): List<PeriodHeader> {
         if (periods.isEmpty()) return emptyList()
         val currentIndex = periods.indexOfFirst { it.isCurrent }

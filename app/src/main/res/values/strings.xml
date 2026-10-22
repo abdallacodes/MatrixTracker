@@ -12,6 +12,13 @@
     <string name="every_3_days">Every 3 Days</string>
     <string name="weekly_7d">Weekly (7 Days)</string>
     <string name="backup_now">Backup Now</string>
+    <string name="export_backup_file">Export Backup File</string>
+    <string name="restore_backup_file">Restore Backup File</string>
+    <string name="backup_exported_success">Backup exported successfully</string>
+    <string name="data_restored_success">Data restored successfully</string>
+    <string name="invalid_backup_file">Invalid backup file</string>
+    <string name="restore_confirmation">Restore Confirmation</string>
+    <string name="restore_warning">Restoring from file will merge or update your current boards and habits. Do you wish to proceed?</string>
     <string name="gestures">Gestures</string>
     <string name="enable_drag_gesture">Enable Drag-to-Mark Gesture</string>
     <string name="appearance_and_theme">Appearance &amp; Theme</string>

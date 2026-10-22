@@ -12,6 +12,13 @@
     <string name="every_3_days">كل ٣ أيام</string>
     <string name="weekly_7d">أسبوعياً (٧ أيام)</string>
     <string name="backup_now">إجراء نسخة احتياطية الآن</string>
+    <string name="export_backup_file">تصدير نسخة احتياطية</string>
+    <string name="restore_backup_file">استعادة نسخة احتياطية</string>
+    <string name="backup_exported_success">تم تصدير النسخة الاحتياطية بنجاح</string>
+    <string name="data_restored_success">تم استعادة البيانات بنجاح</string>
+    <string name="invalid_backup_file">ملف النسخ الاحتياطي غير صالح</string>
+    <string name="restore_confirmation">تأكيد الاستعادة</string>
+    <string name="restore_warning">ستؤدي استعادة ملف النسخة الاحتياطية إلى دمج أو تحديث لوحاتك وعاداتك الحالية. هل ترغب في الاستمرار؟</string>
     <string name="gestures">الإيماءات</string>
     <string name="enable_drag_gesture">تفعيل إيماءة السحب للتعليم</string>
     <string name="appearance_and_theme">المظهر والسمة</string>

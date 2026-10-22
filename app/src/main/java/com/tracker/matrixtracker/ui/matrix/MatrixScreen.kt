@@ -334,6 +334,8 @@ fun MatrixScreen(
             onUpdateThemeMode = viewModel::updateThemeMode,
             onUpdateAppLanguage = viewModel::updateAppLanguage,
             onBackupNow = { viewModel.createFullBackup(context) },
+            onExportBackupUri = { uri -> viewModel.exportBackupToUri(context, uri) },
+            onRestoreBackupUri = { uri -> viewModel.restoreBackupFromUri(context, uri) },
             onDismiss = { showSettingsDialog = false }
         )
     }

@@ -1,5 +1,8 @@
 package com.tracker.matrixtracker.ui.components
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -15,6 +18,10 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -33,9 +40,29 @@ fun SettingsDialog(
     onUpdateThemeMode: (String) -> Unit,
     onUpdateAppLanguage: (String) -> Unit,
     onBackupNow: () -> Unit,
+    onExportBackupUri: (Uri) -> Unit,
+    onRestoreBackupUri: (Uri) -> Unit,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    var pendingRestoreUri by remember { mutableStateOf<Uri?>(null) }
+
+    val todayStr = remember {
+        java.time.LocalDate.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd"))
+    }
+
+    val exportLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/json")
+    ) { uri ->
+        uri?.let { onExportBackupUri(it) }
+    }
+
+    val restoreLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        uri?.let { pendingRestoreUri = it }
+    }
+
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
@@ -109,6 +136,25 @@ fun SettingsDialog(
                         modifier = Modifier.fillMaxWidth().padding(top = 4.dp)
                     ) {
                         Text(stringResource(R.string.backup_now), fontSize = 12.sp)
+                    }
+
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        OutlinedButton(
+                            onClick = { exportLauncher.launch("MatrixTracker_Backup_$todayStr.json") },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(stringResource(R.string.export_backup_file), fontSize = 11.sp, maxLines = 1)
+                        }
+
+                        OutlinedButton(
+                            onClick = { restoreLauncher.launch(arrayOf("application/json", "*/*")) },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(stringResource(R.string.restore_backup_file), fontSize = 11.sp, maxLines = 1)
+                        }
                     }
                 }
 
@@ -194,4 +240,27 @@ fun SettingsDialog(
         },
         modifier = modifier
     )
+
+    pendingRestoreUri?.let { uri ->
+        AlertDialog(
+            onDismissRequest = { pendingRestoreUri = null },
+            title = { Text(stringResource(R.string.restore_confirmation)) },
+            text = { Text(stringResource(R.string.restore_warning)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onRestoreBackupUri(uri)
+                        pendingRestoreUri = null
+                    }
+                ) {
+                    Text(stringResource(R.string.restore_backup_file))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { pendingRestoreUri = null }) {
+                    Text(stringResource(R.string.cancel))
+                }
+            }
+        )
+    }
 }

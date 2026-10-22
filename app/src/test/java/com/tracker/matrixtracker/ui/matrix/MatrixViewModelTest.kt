@@ -4,6 +4,7 @@ import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.tracker.matrixtracker.data.local.AppDatabase
+import com.tracker.matrixtracker.data.repository.SettingsRepository
 import com.tracker.matrixtracker.data.repository.TrackerRepositoryImpl
 import com.tracker.matrixtracker.domain.model.BoardCadence
 import com.tracker.matrixtracker.domain.model.CellStatus
@@ -11,7 +12,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -28,13 +30,15 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class MatrixViewModelTest {
 
-    private val testDispatcher = UnconfinedTestDispatcher()
+    private lateinit var testDispatcher: TestDispatcher
     private lateinit var database: AppDatabase
     private lateinit var viewModel: MatrixViewModel
 
     @Before
     fun setUp() {
+        testDispatcher = StandardTestDispatcher()
         Dispatchers.setMain(testDispatcher)
+
         database = Room.inMemoryDatabaseBuilder(
             ApplicationProvider.getApplicationContext(),
             AppDatabase::class.java
@@ -45,7 +49,8 @@ class MatrixViewModelTest {
             taskDao = database.taskDao(),
             cellEntryDao = database.cellEntryDao()
         )
-        val settingsRepository = com.tracker.matrixtracker.data.repository.SettingsRepository(
+
+        val settingsRepository = SettingsRepository(
             ApplicationProvider.getApplicationContext()
         )
 
@@ -224,6 +229,30 @@ class MatrixViewModelTest {
             state.cells[Pair(firstTask.id, periodKey)]?.note.isNullOrBlank()
         }
         assertTrue(stateAfterDeleteNote.cells[Pair(firstTask.id, periodKey)]?.note.isNullOrBlank())
+
+        job.cancel()
+    }
+
+    @Test
+    fun exportAndImportDataFromJson_preservesDataIntegrity() = runTest(testDispatcher) {
+        val job = backgroundScope.launch { viewModel.uiState.collect {} }
+
+        val initialState = viewModel.uiState.first { !it.isLoading && it.tasks.isNotEmpty() }
+        val firstTask = initialState.tasks.first()
+        val periodKey = initialState.periods.first().key
+
+        viewModel.toggleCell(firstTask.id, periodKey)
+        viewModel.uiState.first { it.cells[Pair(firstTask.id, periodKey)]?.status == CellStatus.DONE }
+
+        val outputStream = java.io.ByteArrayOutputStream()
+        val exportResult = viewModel.exportDataToJson(outputStream)
+        assertTrue(exportResult.isSuccess)
+        val jsonBytes = outputStream.toByteArray()
+        assertTrue(jsonBytes.isNotEmpty())
+
+        val inputStream = java.io.ByteArrayInputStream(jsonBytes)
+        val importResult = viewModel.importDataFromJson(inputStream)
+        assertTrue(importResult.isSuccess)
 
         job.cancel()
     }
