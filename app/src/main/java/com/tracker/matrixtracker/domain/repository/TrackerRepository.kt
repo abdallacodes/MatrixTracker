@@ -18,6 +18,7 @@ interface TrackerRepository {
     suspend fun updateTaskOrder(tasks: List<Task>)
 
     fun getCellEntries(taskIds: List<Long>, periodKeys: List<String>): Flow<List<CellEntry>>
+    fun getAllCellEntries(): Flow<List<CellEntry>>
     suspend fun setCellStatus(
         taskId: Long,
         periodKey: String,

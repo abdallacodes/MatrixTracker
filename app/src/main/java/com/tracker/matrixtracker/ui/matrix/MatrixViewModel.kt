@@ -95,6 +95,38 @@ class MatrixViewModel(
         _selectedBoardId.value = boardId
     }
 
+    fun createBoard(title: String, cadence: BoardCadence) {
+        if (title.isBlank()) return
+        viewModelScope.launch {
+            val newBoardId = repository.saveBoard(
+                Board(title = title.trim(), cadence = cadence)
+            )
+            _selectedBoardId.value = newBoardId
+        }
+    }
+
+    fun updateBoard(board: Board, newTitle: String) {
+        if (newTitle.isBlank()) return
+        viewModelScope.launch {
+            repository.saveBoard(board.copy(title = newTitle.trim()))
+        }
+    }
+
+    fun deleteBoard(board: Board) {
+        viewModelScope.launch {
+            repository.deleteBoard(board)
+            val remaining = repository.getBoards().first()
+            if (remaining.isNotEmpty()) {
+                if (_selectedBoardId.value == board.id) {
+                    _selectedBoardId.value = remaining.first().id
+                }
+            } else {
+                _selectedBoardId.value = null
+                createDefaultBoardIfNone()
+            }
+        }
+    }
+
     fun createDefaultBoardIfNone() {
         viewModelScope.launch {
             val boards = repository.getBoards().first()
@@ -174,6 +206,53 @@ class MatrixViewModel(
 
         viewModelScope.launch {
             repository.updateTaskOrder(currentTasks)
+        }
+    }
+
+    fun exportCurrentBoardAsCsv(context: android.content.Context) {
+        val board = uiState.value.currentBoard ?: return
+        val csvText = com.tracker.matrixtracker.util.MatrixExportUtils.generateCsvForBoard(
+            board = board,
+            tasks = uiState.value.tasks,
+            periods = uiState.value.periods,
+            cells = uiState.value.cells
+        )
+        val sanitizedTitle = board.title.replace(Regex("[^a-zA-Z0-9_-]"), "_")
+        val filename = "${sanitizedTitle}_matrix.csv"
+        com.tracker.matrixtracker.util.ShareUtils.shareTextAsFile(context, filename, csvText, "text/csv")
+    }
+
+    fun createFullBackup(context: android.content.Context) {
+        viewModelScope.launch {
+            val boards = repository.getBoards().first()
+            val allTasks = mutableListOf<Task>()
+            boards.forEach { b ->
+                allTasks.addAll(repository.getTasksForBoard(b.id).first())
+            }
+            val allEntries = repository.getAllCellEntries().first()
+            val jsonText = com.tracker.matrixtracker.util.MatrixExportUtils.exportFullBackupJson(boards, allTasks, allEntries)
+            com.tracker.matrixtracker.util.ShareUtils.shareTextAsFile(context, "matrix_tracker_backup.json", jsonText, "application/json")
+        }
+    }
+
+    suspend fun restoreFromBackupJson(jsonString: String): Boolean {
+        val bundle = com.tracker.matrixtracker.util.MatrixExportUtils.parseBackupJson(jsonString) ?: return false
+        return try {
+            bundle.boards.forEach { board ->
+                repository.saveBoard(board)
+            }
+            bundle.tasks.forEach { task ->
+                repository.saveTask(task)
+            }
+            bundle.entries.forEach { entry ->
+                repository.setCellStatus(entry.taskId, entry.periodKey, entry.status, entry.note)
+            }
+            if (bundle.boards.isNotEmpty()) {
+                _selectedBoardId.value = bundle.boards.first().id
+            }
+            true
+        } catch (_: Exception) {
+            false
         }
     }
 

@@ -35,18 +35,15 @@ import java.util.Locale
 @Composable
 fun PeriodNavigationBar(
     currentBoard: Board?,
-    availableBoards: List<Board>,
     selectedYearMonth: YearMonth,
     selectedYear: Int,
-    onSelectBoard: (Long) -> Unit,
+    onOpenBoardSelection: () -> Unit,
     onPreviousPeriod: () -> Unit,
     onNextPeriod: () -> Unit,
     onGoToCurrent: () -> Unit,
     onAddNewTask: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    var isBoardDropdownExpanded by remember { mutableStateOf(false) }
-
     val periodTitle = when (currentBoard?.cadence) {
         BoardCadence.DAILY -> selectedYearMonth.format(DateTimeFormatter.ofPattern("MMMM yyyy", Locale.US))
         BoardCadence.WEEKLY, BoardCadence.MONTHLY -> "$selectedYear"
@@ -62,28 +59,13 @@ fun PeriodNavigationBar(
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             OutlinedButton(
-                onClick = { isBoardDropdownExpanded = true }
+                onClick = onOpenBoardSelection
             ) {
                 Text(
                     text = currentBoard?.title ?: "Select Board",
                     fontWeight = FontWeight.Bold,
                     fontSize = 13.sp
                 )
-            }
-
-            DropdownMenu(
-                expanded = isBoardDropdownExpanded,
-                onDismissRequest = { isBoardDropdownExpanded = false }
-            ) {
-                availableBoards.forEach { board ->
-                    DropdownMenuItem(
-                        text = { Text("${board.title} (${board.cadence.name})") },
-                        onClick = {
-                            onSelectBoard(board.id)
-                            isBoardDropdownExpanded = false
-                        }
-                    )
-                }
             }
         }
 

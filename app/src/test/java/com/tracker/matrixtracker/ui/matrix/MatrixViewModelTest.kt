@@ -127,4 +127,28 @@ class MatrixViewModelTest {
 
         job.cancel()
     }
+
+    @Test
+    fun boardManagement_createUpdateAndDeleteBoard() = runBlocking {
+        val job = launch(testDispatcher) { viewModel.uiState.collect {} }
+
+        val initialState = viewModel.uiState.first { !it.isLoading && it.tasks.isNotEmpty() }
+        val initialBoardCount = initialState.availableBoards.size
+
+        viewModel.createBoard("Weekly Workouts", com.tracker.matrixtracker.domain.model.BoardCadence.WEEKLY)
+        val stateAfterCreate = viewModel.uiState.first { it.availableBoards.size == initialBoardCount + 1 }
+        val createdBoard = stateAfterCreate.availableBoards.find { it.title == "Weekly Workouts" }!!
+        assertEquals(com.tracker.matrixtracker.domain.model.BoardCadence.WEEKLY, createdBoard.cadence)
+        assertEquals(createdBoard.id, stateAfterCreate.currentBoard?.id)
+
+        viewModel.updateBoard(createdBoard, "Fitness Routine")
+        val stateAfterUpdate = viewModel.uiState.first { it.currentBoard?.title == "Fitness Routine" }
+        assertEquals("Fitness Routine", stateAfterUpdate.currentBoard?.title)
+
+        viewModel.deleteBoard(createdBoard)
+        val stateAfterDelete = viewModel.uiState.first { it.availableBoards.none { b -> b.id == createdBoard.id } }
+        assertFalse(stateAfterDelete.availableBoards.any { it.id == createdBoard.id })
+
+        job.cancel()
+    }
 }

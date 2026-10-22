@@ -20,6 +20,9 @@ import androidx.compose.ui.unit.sp
 import com.tracker.matrixtracker.domain.model.CellEntry
 import com.tracker.matrixtracker.domain.model.CellStatus
 
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun MatrixStatusCell(
@@ -28,6 +31,7 @@ fun MatrixStatusCell(
     onLongClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val haptic = LocalHapticFeedback.current
     val status = entry?.status ?: CellStatus.EMPTY
     val hasNote = !entry?.note.isNullOrBlank()
 
@@ -60,8 +64,14 @@ fun MatrixStatusCell(
             .background(bgColor)
             .border(0.5.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
             .combinedClickable(
-                onClick = onToggle,
-                onLongClick = onLongClick
+                onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    onToggle()
+                },
+                onLongClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onLongClick()
+                }
             ),
         contentAlignment = Alignment.Center
     ) {

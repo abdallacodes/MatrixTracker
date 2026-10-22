@@ -69,6 +69,12 @@ class TrackerRepositoryImpl(
         }
     }
 
+    override fun getAllCellEntries(): Flow<List<CellEntry>> {
+        return cellEntryDao.getAllCellEntries().map { entities ->
+            entities.map { it.toDomain() }
+        }
+    }
+
     override suspend fun setCellStatus(
         taskId: Long,
         periodKey: String,

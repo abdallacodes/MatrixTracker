@@ -18,6 +18,9 @@ interface CellEntryDao {
         periodKeys: List<String>
     ): Flow<List<CellEntryEntity>>
 
+    @Query("SELECT * FROM cell_entries")
+    fun getAllCellEntries(): Flow<List<CellEntryEntity>>
+
     @Query("DELETE FROM cell_entries WHERE taskId = :taskId AND periodKey = :periodKey")
     suspend fun deleteCellEntry(taskId: Long, periodKey: String)
 }
