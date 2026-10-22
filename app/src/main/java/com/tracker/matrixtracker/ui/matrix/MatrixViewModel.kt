@@ -119,6 +119,14 @@ class MatrixViewModel(
         }
     }
 
+    fun setCellNote(taskId: Long, periodKey: String, note: String) {
+        viewModelScope.launch {
+            val currentEntry = uiState.value.cells[Pair(taskId, periodKey)]
+            val currentStatus = currentEntry?.status ?: CellStatus.DONE
+            repository.setCellStatus(taskId, periodKey, currentStatus, note.ifBlank { null })
+        }
+    }
+
     fun previousPeriod() {
         val board = uiState.value.currentBoard ?: return
         when (board.cadence) {
