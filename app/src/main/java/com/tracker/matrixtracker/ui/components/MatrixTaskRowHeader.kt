@@ -30,7 +30,7 @@ fun MatrixTaskRowHeader(
 ) {
     Row(
         modifier = modifier
-            .width(130.dp)
+            .width(155.dp)
             .height(44.dp)
             .background(MaterialTheme.colorScheme.surface)
             .border(0.5.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))

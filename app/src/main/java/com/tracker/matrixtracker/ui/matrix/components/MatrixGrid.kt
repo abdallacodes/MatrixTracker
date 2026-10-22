@@ -6,6 +6,7 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -16,8 +17,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -44,13 +47,23 @@ fun MatrixGrid(
     val horizontalScrollState = rememberScrollState()
     val verticalScrollState = rememberScrollState()
 
+    val density = LocalDensity.current
+    LaunchedEffect(periods) {
+        val currentIndex = periods.indexOfFirst { it.isCurrent }
+        if (currentIndex >= 0) {
+            val cellWidthPx = with(density) { 48.dp.toPx() }
+            val targetScrollPx = ((currentIndex - 2) * cellWidthPx).coerceAtLeast(0f).toInt()
+            horizontalScrollState.animateScrollTo(targetScrollPx)
+        }
+    }
+
     Column(modifier = modifier.fillMaxSize()) {
         Row(
-            modifier = Modifier.background(MaterialTheme.colorScheme.surface)
+            modifier = Modifier.background(MaterialTheme.colorScheme.surface),
         ) {
             Box(
                 modifier = Modifier
-                    .width(130.dp)
+                    .width(155.dp)
                     .height(48.dp)
                     .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
                     .border(0.5.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
@@ -91,7 +104,7 @@ fun MatrixGrid(
 
         Row(
             modifier = Modifier
-                .weight(1f)
+                .weight(1f, fill = false)
                 .background(MaterialTheme.colorScheme.surface)
         ) {
             Column(
@@ -106,6 +119,13 @@ fun MatrixGrid(
                     )
                 }
             }
+
+            Box(
+                modifier = Modifier
+                    .width(1.5.dp)
+                    .fillMaxHeight()
+                    .background(MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
+            )
 
             Box(
                 modifier = Modifier
@@ -151,7 +171,7 @@ fun MatrixGrid(
         ) {
             Box(
                 modifier = Modifier
-                    .width(130.dp)
+                    .width(155.dp)
                     .height(36.dp)
                     .border(0.5.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
                     .padding(horizontal = 8.dp),
