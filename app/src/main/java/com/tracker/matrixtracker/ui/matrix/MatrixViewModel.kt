@@ -24,10 +24,61 @@ import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.YearMonth
 
+import com.tracker.matrixtracker.data.repository.AppSettings
+import com.tracker.matrixtracker.data.repository.SettingsRepository
+
 @OptIn(ExperimentalCoroutinesApi::class)
 class MatrixViewModel(
-    private val repository: TrackerRepository
+    private val repository: TrackerRepository,
+    private val settingsRepository: SettingsRepository
 ) : ViewModel() {
+
+    val settingsState: StateFlow<AppSettings> = settingsRepository.settingsFlow
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = AppSettings()
+        )
+
+    fun updateAutoBackupEnabled(enabled: Boolean, context: android.content.Context) {
+        viewModelScope.launch {
+            settingsRepository.updateAutoBackupEnabled(enabled)
+            val interval = settingsState.value.autoBackupIntervalDays
+            com.tracker.matrixtracker.util.AutoBackupWorker.scheduleOrCancel(context, enabled, interval)
+        }
+    }
+
+    fun updateAutoBackupIntervalDays(intervalDays: Int, context: android.content.Context) {
+        viewModelScope.launch {
+            settingsRepository.updateAutoBackupIntervalDays(intervalDays)
+            val enabled = settingsState.value.autoBackupEnabled
+            com.tracker.matrixtracker.util.AutoBackupWorker.scheduleOrCancel(context, enabled, intervalDays)
+        }
+    }
+
+    fun updateDragGestureEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsRepository.updateDragGestureEnabled(enabled)
+        }
+    }
+
+    fun updateThemeMode(mode: String) {
+        viewModelScope.launch {
+            settingsRepository.updateThemeMode(mode)
+        }
+    }
+
+    fun updateAppLanguage(language: String) {
+        viewModelScope.launch {
+            settingsRepository.updateAppLanguage(language)
+            val locales = if (language == "SYSTEM") {
+                androidx.core.os.LocaleListCompat.getEmptyLocaleList()
+            } else {
+                androidx.core.os.LocaleListCompat.forLanguageTags(language)
+            }
+            androidx.appcompat.app.AppCompatDelegate.setApplicationLocales(locales)
+        }
+    }
 
     private val _selectedBoardId = MutableStateFlow<Long?>(null)
     val selectedBoardId: StateFlow<Long?> = _selectedBoardId.asStateFlow()
@@ -243,6 +294,13 @@ class MatrixViewModel(
     fun deleteTask(task: Task) {
         viewModelScope.launch {
             repository.deleteTask(task)
+        }
+    }
+
+    fun renameTask(task: Task, newTitle: String) {
+        if (newTitle.isBlank()) return
+        viewModelScope.launch {
+            repository.saveTask(task.copy(title = newTitle.trim()))
         }
     }
 

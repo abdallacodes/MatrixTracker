@@ -27,6 +27,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.tracker.matrixtracker.domain.model.Task
 
+import androidx.compose.ui.res.stringResource
+import com.tracker.matrixtracker.R
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun MatrixTaskRowHeader(
@@ -34,6 +37,7 @@ fun MatrixTaskRowHeader(
     progressPercentage: Float,
     modifier: Modifier = Modifier,
     onLongClick: (() -> Unit)? = null,
+    onRenameTask: (() -> Unit)? = null,
     onMarkPast7DaysDone: (() -> Unit)? = null,
 ) {
     var isMenuExpanded by remember { mutableStateOf(false) }
@@ -48,7 +52,7 @@ fun MatrixTaskRowHeader(
                 .combinedClickable(
                     onClick = {},
                     onLongClick = {
-                        if (onMarkPast7DaysDone != null) {
+                        if (onRenameTask != null || onMarkPast7DaysDone != null) {
                             isMenuExpanded = true
                         } else {
                             onLongClick?.invoke()
@@ -62,7 +66,7 @@ fun MatrixTaskRowHeader(
             Text(
                 text = task.title,
                 fontSize = 12.sp,
-                fontWeight = FontWeight.Medium,
+                fontWeight = FontWeight.Bold,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f)
@@ -80,6 +84,15 @@ fun MatrixTaskRowHeader(
             expanded = isMenuExpanded,
             onDismissRequest = { isMenuExpanded = false }
         ) {
+            if (onRenameTask != null) {
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.edit_task)) },
+                    onClick = {
+                        isMenuExpanded = false
+                        onRenameTask()
+                    }
+                )
+            }
             if (onMarkPast7DaysDone != null) {
                 DropdownMenuItem(
                     text = { Text("Mark Past 7 Days Done") },

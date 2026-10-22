@@ -16,6 +16,11 @@ import com.tracker.matrixtracker.ui.matrix.MatrixScreen
 import com.tracker.matrixtracker.ui.matrix.MatrixViewModel
 import com.tracker.matrixtracker.ui.theme.MatrixTrackerTheme
 
+import androidx.compose.runtime.getValue
+import com.tracker.matrixtracker.data.repository.AppSettings
+import com.tracker.matrixtracker.data.repository.SettingsRepository
+import androidx.compose.runtime.collectAsState
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -32,10 +37,18 @@ class MainActivity : ComponentActivity() {
             taskDao = database.taskDao(),
             cellEntryDao = database.cellEntryDao()
         )
+        val settingsRepository = SettingsRepository(applicationContext)
 
         setContent {
-            MatrixTrackerTheme {
-                val viewModel = remember { MatrixViewModel(repository) }
+            val settingsState by settingsRepository.settingsFlow.collectAsState(initial = AppSettings())
+            val isDark = when (settingsState.themeMode) {
+                "DARK", "AMOLED" -> true
+                "LIGHT" -> false
+                else -> androidx.compose.foundation.isSystemInDarkTheme()
+            }
+
+            MatrixTrackerTheme(darkTheme = isDark) {
+                val viewModel = remember { MatrixViewModel(repository, settingsRepository) }
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     MatrixScreen(
                         viewModel = viewModel,

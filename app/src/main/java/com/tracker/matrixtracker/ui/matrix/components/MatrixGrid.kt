@@ -51,6 +51,7 @@ fun MatrixGrid(
     cells: Map<Pair<Long, String>, CellEntry>,
     taskCompletionPercentage: Map<Long, Float>,
     periodCompletionPercentage: Map<String, Float>,
+    dragGestureEnabled: Boolean = true,
     onToggleCell: (taskId: Long, periodKey: String) -> Unit,
     onBatchMarkCells: (taskId: Long, periodKeys: List<String>, status: CellStatus) -> Unit,
     onMarkAllHabitsForPeriod: (periodKey: String, status: CellStatus) -> Unit,
@@ -58,6 +59,7 @@ fun MatrixGrid(
     onMarkTaskRecentDays: (taskId: Long, daysCount: Int, status: CellStatus) -> Unit,
     onCellLongClick: (taskId: Long, periodKey: String) -> Unit,
     onTaskLongClick: (task: Task) -> Unit,
+    onRenameTask: ((Task) -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     val horizontalScrollState = rememberScrollState()
@@ -145,6 +147,7 @@ fun MatrixGrid(
                         task = task,
                         progressPercentage = progress,
                         onLongClick = { onTaskLongClick(task) },
+                        onRenameTask = { onRenameTask?.invoke(task) },
                         onMarkPast7DaysDone = { onMarkTaskRecentDays(task.id, 7, CellStatus.DONE) }
                     )
                 }
@@ -183,38 +186,40 @@ fun MatrixGrid(
                 Column {
                     tasks.forEach { task ->
                         Row(
-                            modifier = Modifier.pointerInput(task.id, periods) {
-                                detectHorizontalDragGestures(
-                                    onDragStart = { offset ->
-                                        draggedTaskId = task.id
-                                        val col = (offset.x / cellWidthPx).toInt().coerceIn(0, periods.lastIndex)
-                                        dragStartIndex = col
-                                        dragEndIndex = col
-                                    },
-                                    onHorizontalDrag = { change, _ ->
-                                        if (draggedTaskId == task.id) {
-                                            val currentX = change.position.x
-                                            val col = (currentX / cellWidthPx).toInt().coerceIn(0, periods.lastIndex)
-                                            if (col != dragEndIndex) {
-                                                dragEndIndex = col
-                                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            modifier = if (dragGestureEnabled) {
+                                Modifier.pointerInput(task.id, periods) {
+                                    detectHorizontalDragGestures(
+                                        onDragStart = { offset ->
+                                            draggedTaskId = task.id
+                                            val col = (offset.x / cellWidthPx).toInt().coerceIn(0, periods.lastIndex)
+                                            dragStartIndex = col
+                                            dragEndIndex = col
+                                        },
+                                        onHorizontalDrag = { change, _ ->
+                                            if (draggedTaskId == task.id) {
+                                                val currentX = change.position.x
+                                                val col = (currentX / cellWidthPx).toInt().coerceIn(0, periods.lastIndex)
+                                                if (col != dragEndIndex) {
+                                                    dragEndIndex = col
+                                                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                                }
                                             }
+                                        },
+                                        onDragEnd = {
+                                            if (draggedTaskId == task.id) {
+                                                val start = minOf(dragStartIndex, dragEndIndex)
+                                                val end = maxOf(dragStartIndex, dragEndIndex)
+                                                val keys = (start..end).map { periods[it].key }
+                                                onBatchMarkCells(task.id, keys, CellStatus.DONE)
+                                            }
+                                            draggedTaskId = null
+                                        },
+                                        onDragCancel = {
+                                            draggedTaskId = null
                                         }
-                                    },
-                                    onDragEnd = {
-                                        if (draggedTaskId == task.id) {
-                                            val start = minOf(dragStartIndex, dragEndIndex)
-                                            val end = maxOf(dragStartIndex, dragEndIndex)
-                                            val keys = (start..end).map { periods[it].key }
-                                            onBatchMarkCells(task.id, keys, CellStatus.DONE)
-                                        }
-                                        draggedTaskId = null
-                                    },
-                                    onDragCancel = {
-                                        draggedTaskId = null
-                                    }
-                                )
-                            }
+                                    )
+                                }
+                            } else Modifier
                         ) {
                             periods.forEachIndexed { colIndex, period ->
                                 val isHighlighted = (draggedTaskId == task.id) &&

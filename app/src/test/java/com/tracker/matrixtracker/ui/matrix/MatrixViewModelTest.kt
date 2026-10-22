@@ -45,8 +45,11 @@ class MatrixViewModelTest {
             taskDao = database.taskDao(),
             cellEntryDao = database.cellEntryDao()
         )
+        val settingsRepository = com.tracker.matrixtracker.data.repository.SettingsRepository(
+            ApplicationProvider.getApplicationContext()
+        )
 
-        viewModel = MatrixViewModel(repository)
+        viewModel = MatrixViewModel(repository, settingsRepository)
     }
 
     @After
@@ -125,6 +128,22 @@ class MatrixViewModelTest {
         viewModel.deleteTask(taskToDelete)
         val stateAfterDelete = viewModel.uiState.first { it.tasks.none { t -> t.id == taskToDelete.id } }
         assertFalse(stateAfterDelete.tasks.any { it.id == taskToDelete.id })
+
+        job.cancel()
+    }
+
+    @Test
+    fun taskManagement_renameTask() = runTest(testDispatcher) {
+        val job = backgroundScope.launch { viewModel.uiState.collect {} }
+
+        val initialState = viewModel.uiState.first { !it.isLoading && it.tasks.isNotEmpty() }
+        val firstTask = initialState.tasks.first()
+
+        viewModel.renameTask(firstTask, "Renamed Habit")
+        val stateAfterRename = viewModel.uiState.first { state ->
+            state.tasks.any { it.id == firstTask.id && it.title == "Renamed Habit" }
+        }
+        assertEquals("Renamed Habit", stateAfterRename.tasks.find { it.id == firstTask.id }?.title)
 
         job.cancel()
     }
