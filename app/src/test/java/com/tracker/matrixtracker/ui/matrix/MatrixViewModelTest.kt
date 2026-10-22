@@ -5,14 +5,15 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.tracker.matrixtracker.data.local.AppDatabase
 import com.tracker.matrixtracker.data.repository.TrackerRepositoryImpl
+import com.tracker.matrixtracker.domain.model.BoardCadence
 import com.tracker.matrixtracker.domain.model.CellStatus
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -55,8 +56,8 @@ class MatrixViewModelTest {
     }
 
     @Test
-    fun initialState_seedsDefaultBoardWhenDbEmpty() = runBlocking {
-        val job = launch(testDispatcher) { viewModel.uiState.collect {} }
+    fun initialState_seedsDefaultBoardWhenDbEmpty() = runTest(testDispatcher) {
+        val job = backgroundScope.launch { viewModel.uiState.collect {} }
 
         val state = viewModel.uiState.first { !it.isLoading && it.tasks.isNotEmpty() }
         assertNotNull(state.currentBoard)
@@ -67,8 +68,8 @@ class MatrixViewModelTest {
     }
 
     @Test
-    fun toggleCell_updatesStateAndCalculatesProgress() = runBlocking {
-        val job = launch(testDispatcher) { viewModel.uiState.collect {} }
+    fun toggleCell_updatesStateAndCalculatesProgress() = runTest(testDispatcher) {
+        val job = backgroundScope.launch { viewModel.uiState.collect {} }
 
         val initialState = viewModel.uiState.first { !it.isLoading && it.tasks.isNotEmpty() }
         val firstTask = initialState.tasks.first()
@@ -88,8 +89,8 @@ class MatrixViewModelTest {
     }
 
     @Test
-    fun periodNavigation_updatesSelectedYearMonth() = runBlocking {
-        val job = launch(testDispatcher) { viewModel.uiState.collect {} }
+    fun periodNavigation_updatesSelectedYearMonth() = runTest(testDispatcher) {
+        val job = backgroundScope.launch { viewModel.uiState.collect {} }
 
         val state1 = viewModel.uiState.first { !it.isLoading && it.tasks.isNotEmpty() }
         val initialYM = state1.selectedYearMonth
@@ -106,8 +107,8 @@ class MatrixViewModelTest {
     }
 
     @Test
-    fun taskManagement_addNewTaskDeleteTaskAndReorder() = runBlocking {
-        val job = launch(testDispatcher) { viewModel.uiState.collect {} }
+    fun taskManagement_addNewTaskDeleteTaskAndReorder() = runTest(testDispatcher) {
+        val job = backgroundScope.launch { viewModel.uiState.collect {} }
 
         val state1 = viewModel.uiState.first { !it.isLoading && it.tasks.isNotEmpty() }
         val initialCount = state1.tasks.size
@@ -129,16 +130,16 @@ class MatrixViewModelTest {
     }
 
     @Test
-    fun boardManagement_createUpdateAndDeleteBoard() = runBlocking {
-        val job = launch(testDispatcher) { viewModel.uiState.collect {} }
+    fun boardManagement_createUpdateAndDeleteBoard() = runTest(testDispatcher) {
+        val job = backgroundScope.launch { viewModel.uiState.collect {} }
 
         val initialState = viewModel.uiState.first { !it.isLoading && it.tasks.isNotEmpty() }
         val initialBoardCount = initialState.availableBoards.size
 
-        viewModel.createBoard("Weekly Workouts", com.tracker.matrixtracker.domain.model.BoardCadence.WEEKLY)
+        viewModel.createBoard("Weekly Workouts", BoardCadence.WEEKLY)
         val stateAfterCreate = viewModel.uiState.first { it.availableBoards.size == initialBoardCount + 1 }
         val createdBoard = stateAfterCreate.availableBoards.find { it.title == "Weekly Workouts" }!!
-        assertEquals(com.tracker.matrixtracker.domain.model.BoardCadence.WEEKLY, createdBoard.cadence)
+        assertEquals(BoardCadence.WEEKLY, createdBoard.cadence)
         assertEquals(createdBoard.id, stateAfterCreate.currentBoard?.id)
 
         viewModel.updateBoard(createdBoard, "Fitness Routine")
@@ -153,8 +154,8 @@ class MatrixViewModelTest {
     }
 
     @Test
-    fun batchCellOperations_markAllHabitsAndRecentDays() = runBlocking {
-        val job = launch(testDispatcher) { viewModel.uiState.collect {} }
+    fun batchCellOperations_markAllHabitsAndRecentDays() = runTest(testDispatcher) {
+        val job = backgroundScope.launch { viewModel.uiState.collect {} }
 
         val initialState = viewModel.uiState.first { !it.isLoading && it.tasks.isNotEmpty() }
         val periodKey = initialState.periods.first().key
