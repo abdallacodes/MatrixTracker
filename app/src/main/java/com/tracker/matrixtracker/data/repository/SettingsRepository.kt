@@ -15,7 +15,7 @@ import kotlinx.coroutines.flow.map
 data class AppSettings(
     val autoBackupEnabled: Boolean = true,
     val autoBackupIntervalDays: Int = 1,
-    val dragGestureEnabled: Boolean = true,
+    val dragGestureEnabled: Boolean = false,
     val themeMode: String = "DARK",
     val appLanguage: String = "en",
     val lastBackupTime: Long = 0L
@@ -44,7 +44,7 @@ class SettingsRepository(val context: Context) {
         AppSettings(
             autoBackupEnabled = prefs[Keys.AUTO_BACKUP_ENABLED] ?: true,
             autoBackupIntervalDays = prefs[Keys.AUTO_BACKUP_INTERVAL_DAYS] ?: 1,
-            dragGestureEnabled = prefs[Keys.DRAG_GESTURE_ENABLED] ?: true,
+            dragGestureEnabled = prefs[Keys.DRAG_GESTURE_ENABLED] ?: false,
             themeMode = themeMode,
             appLanguage = appLanguage,
             lastBackupTime = prefs[Keys.LAST_BACKUP_TIME] ?: 0L

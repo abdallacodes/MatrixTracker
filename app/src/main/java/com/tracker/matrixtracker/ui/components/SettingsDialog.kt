@@ -51,6 +51,7 @@ fun SettingsDialog(
     onBackupNow: () -> Unit,
     onExportBackupUri: (Uri) -> Unit,
     onRestoreBackupUri: (Uri) -> Unit,
+    onOpenHelp: () -> Unit,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -125,7 +126,22 @@ fun SettingsDialog(
             verticalArrangement = Arrangement.spacedBy(16.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
-            // Section 1: Backup & Storage
+            // Section 1: Help & Guide
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                SettingsRow(
+                    title = stringResource(R.string.how_to_use),
+                    subtitle = "Learn core gestures, notes, and quick actions",
+                    icon = Icons.Default.Settings,
+                    onClick = onOpenHelp
+                )
+            }
+
+            HorizontalDivider(
+                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
+                modifier = Modifier.padding(horizontal = 16.dp)
+            )
+
+            // Section 2: Backup & Storage
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(
                     text = stringResource(R.string.backup_and_storage),
@@ -183,7 +199,7 @@ fun SettingsDialog(
                 modifier = Modifier.padding(horizontal = 16.dp)
             )
 
-            // Section 2: Appearance & Theme
+            // Section 3: Appearance & Theme
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(
                     text = stringResource(R.string.appearance_and_theme),
@@ -206,7 +222,7 @@ fun SettingsDialog(
                 modifier = Modifier.padding(horizontal = 16.dp)
             )
 
-            // Section 3: Language & Localization
+            // Section 4: Language & Localization
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(
                     text = stringResource(R.string.language_and_locale),
@@ -229,7 +245,7 @@ fun SettingsDialog(
                 modifier = Modifier.padding(horizontal = 16.dp)
             )
 
-            // Section 4: Gestures & Controls
+            // Section 5: Gestures & Controls
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(
                     text = stringResource(R.string.gestures),

@@ -76,4 +76,12 @@
     <string name="mark_past_7_days">Mark Past 7 Days Done</string>
     <string name="manage_task_options">Manage Task Options</string>
     <string name="today">Today</string>
+
+    <string name="how_to_use">How to Use MatrixTracker</string>
+    <string name="guide_single_tap_title">Single Tap</string>
+    <string name="guide_single_tap_desc">Tap any grid cell to cycle through status: Done (✓), Failed (✕), Skipped (—), or Clear.</string>
+    <string name="guide_long_press_title">Long Press</string>
+    <string name="guide_long_press_desc">Long press a cell to add a micro-note. Long press date or task headers for batch quick actions.</string>
+    <string name="guide_swipe_title">Horizontal Drag</string>
+    <string name="guide_swipe_desc">Drag horizontally across cell rows to batch-mark multiple days as done in a single fluid gesture.</string>
 </resources>

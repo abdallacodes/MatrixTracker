@@ -76,4 +76,12 @@
     <string name="mark_past_7_days">تعليم آخر ٧ أيام كتم</string>
     <string name="manage_task_options">خيارات المهمة</string>
     <string name="today">اليوم</string>
+
+    <string name="how_to_use">كيف أستخدم التطبيق؟</string>
+    <string name="guide_single_tap_title">الضغط المفرد</string>
+    <string name="guide_single_tap_desc">اضغط على أي خلية للتنقل بين الحالات: تم (✓)، لم يتم (✕)، تخطي (—)، أو فارغ.</string>
+    <string name="guide_long_press_title">الضغط المطول</string>
+    <string name="guide_long_press_desc">اضغط مطولاً على خلية لإضافة ملاحظة. اضغط مطولاً على التواريخ أو عناوين المهام للإجراءات السريعة.</string>
+    <string name="guide_swipe_title">إيماءة السحب الأفقي</string>
+    <string name="guide_swipe_desc">اسحب أفقياً عبر الخلايا لتعليم عدة أيام دفعة واحدة بإيماءة واحدة سلسة.</string>
 </resources>

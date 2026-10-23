@@ -68,6 +68,7 @@ import com.tracker.matrixtracker.domain.model.BoardCadence
 import com.tracker.matrixtracker.domain.model.Task
 import com.tracker.matrixtracker.ui.components.BoardSelectionBottomSheet
 import com.tracker.matrixtracker.ui.components.CellNoteDialog
+import com.tracker.matrixtracker.ui.components.HelpBottomSheet
 import com.tracker.matrixtracker.ui.components.ConsistencyDashboard
 import com.tracker.matrixtracker.ui.components.CreateBoardDialog
 import com.tracker.matrixtracker.ui.components.EditTaskDialog
@@ -154,6 +155,7 @@ fun MatrixScreen(
     var isOverflowMenuExpanded by remember { mutableStateOf(false) }
 
     var showSettingsDialog by remember { mutableStateOf(false) }
+    var showHelpBottomSheet by remember { mutableStateOf(false) }
     var showBoardSelectionBottomSheet by remember { mutableStateOf(false) }
     var showCreateBoardDialog by remember { mutableStateOf(false) }
 
@@ -476,7 +478,14 @@ fun MatrixScreen(
             onBackupNow = { viewModel.performBackupNow(context) },
             onExportBackupUri = { uri -> viewModel.exportBackupToUri(context, uri) },
             onRestoreBackupUri = { uri -> viewModel.restoreBackupFromUri(context, uri) },
+            onOpenHelp = { showHelpBottomSheet = true },
             onDismiss = { showSettingsDialog = false }
+        )
+    }
+
+    if (showHelpBottomSheet) {
+        HelpBottomSheet(
+            onDismiss = { showHelpBottomSheet = false }
         )
     }
 

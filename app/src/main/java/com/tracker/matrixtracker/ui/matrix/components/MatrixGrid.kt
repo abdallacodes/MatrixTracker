@@ -53,7 +53,7 @@ fun MatrixGrid(
     cells: Map<Pair<Long, String>, CellEntry>,
     taskCompletionPercentage: Map<Long, Float>,
     periodCompletionPercentage: Map<String, Float>,
-    dragGestureEnabled: Boolean = true,
+    dragGestureEnabled: Boolean = false,
     scrollToTodayTrigger: Int = 0,
     onToggleCell: (taskId: Long, periodKey: String) -> Unit,
     onBatchMarkCells: (taskId: Long, periodKeys: List<String>, status: CellStatus) -> Unit,
