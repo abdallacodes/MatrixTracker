@@ -40,9 +40,11 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.tracker.matrixtracker.R
 import androidx.compose.ui.unit.sp
 import com.tracker.matrixtracker.domain.model.CellEntry
 import com.tracker.matrixtracker.domain.model.CellStatus
@@ -131,7 +133,7 @@ fun MatrixGrid(
                     contentAlignment = Alignment.CenterStart
                 ) {
                     Text(
-                        text = "Habit / Task",
+                        text = stringResource(R.string.habit_or_task),
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -196,7 +198,7 @@ fun MatrixGrid(
                         contentAlignment = Alignment.CenterStart
                     ) {
                         Text(
-                            text = "Daily Total",
+                            text = stringResource(R.string.daily_total),
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -340,7 +342,7 @@ fun MatrixGrid(
                 onClick = { scrollToToday() },
                 label = {
                     Text(
-                        text = "🎯 Today",
+                        text = "🎯 " + stringResource(R.string.today),
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold
                     )

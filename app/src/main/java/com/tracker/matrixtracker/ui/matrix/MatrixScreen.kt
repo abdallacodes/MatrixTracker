@@ -198,7 +198,7 @@ fun MatrixScreen(
                     onToggleCell = { taskId, periodKey ->
                         val existingNote = uiState.cells[Pair(taskId, periodKey)]?.note
                         if (!existingNote.isNullOrBlank()) {
-                            android.widget.Toast.makeText(context, "Note: $existingNote", android.widget.Toast.LENGTH_SHORT).show()
+                            android.widget.Toast.makeText(context, context.resources.getString(R.string.note_prefix, existingNote), android.widget.Toast.LENGTH_SHORT).show()
                         }
                         viewModel.toggleCell(taskId, periodKey)
                     },
@@ -289,7 +289,7 @@ fun MatrixScreen(
                                 onDismissRequest = { isOverflowMenuExpanded = false }
                             ) {
                                 DropdownMenuItem(
-                                    text = { Text("Export Board as CSV") },
+                                    text = { Text(stringResource(R.string.export_csv)) },
                                     onClick = {
                                         isOverflowMenuExpanded = false
                                         viewModel.exportCurrentBoardAsCsv(context)
@@ -297,7 +297,7 @@ fun MatrixScreen(
                                 )
 
                                 DropdownMenuItem(
-                                    text = { Text("Print / Save as PDF") },
+                                    text = { Text(stringResource(R.string.print_pdf)) },
                                     onClick = {
                                         isOverflowMenuExpanded = false
                                         viewModel.printCurrentBoard(context)
@@ -305,7 +305,7 @@ fun MatrixScreen(
                                 )
 
                                 DropdownMenuItem(
-                                    text = { Text("Share PDF") },
+                                    text = { Text(stringResource(R.string.share_pdf)) },
                                     onClick = {
                                         isOverflowMenuExpanded = false
                                         viewModel.shareBoardAsPdf(context)
@@ -313,7 +313,7 @@ fun MatrixScreen(
                                 )
 
                                 DropdownMenuItem(
-                                    text = { Text("Backup All Data (JSON)") },
+                                    text = { Text(stringResource(R.string.backup_json)) },
                                     onClick = {
                                         isOverflowMenuExpanded = false
                                         viewModel.createFullBackup(context)
@@ -321,7 +321,7 @@ fun MatrixScreen(
                                 )
 
                                 DropdownMenuItem(
-                                    text = { Text("Restore from Backup") },
+                                    text = { Text(stringResource(R.string.restore_backup)) },
                                     onClick = {
                                         isOverflowMenuExpanded = false
                                         restoreFileLauncher.launch("*/*")
@@ -382,7 +382,7 @@ fun MatrixScreen(
                             onToggleCell = { taskId, periodKey ->
                                 val existingNote = uiState.cells[Pair(taskId, periodKey)]?.note
                                 if (!existingNote.isNullOrBlank()) {
-                                    android.widget.Toast.makeText(context, "Note: $existingNote", android.widget.Toast.LENGTH_SHORT).show()
+                                    android.widget.Toast.makeText(context, context.resources.getString(R.string.note_prefix, existingNote), android.widget.Toast.LENGTH_SHORT).show()
                                 }
                                 viewModel.toggleCell(taskId, periodKey)
                             },
@@ -463,7 +463,7 @@ fun MatrixScreen(
 
         MatrixBottomSheet(
             onDismissRequest = { selectedBoardForEdit = null },
-            title = "Edit Board Title"
+            title = stringResource(R.string.edit_board_title)
         ) {
             Column(
                 verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -472,7 +472,7 @@ fun MatrixScreen(
                 MatrixTextField(
                     value = editBoardTitle,
                     onValueChange = { editBoardTitle = it },
-                    placeholder = "Board Title",
+                    placeholder = stringResource(R.string.board_title),
                     singleLine = true,
                     focusRequester = editBoardFocusRequester
                 )
@@ -487,7 +487,7 @@ fun MatrixScreen(
                     shape = CircleShape,
                     modifier = Modifier.fillMaxWidth().height(48.dp)
                 ) {
-                    Text("Save", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.save), fontSize = 14.sp, fontWeight = FontWeight.Bold)
                 }
 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -497,9 +497,9 @@ fun MatrixScreen(
 
     selectedBoardForDelete?.let { board ->
         MatrixConfirmDialog(
-            title = "Delete Board",
-            message = "Are you sure you want to delete \"${board.title}\"? All its tasks and matrix entries will be removed.",
-            confirmLabel = "Delete",
+            title = stringResource(R.string.delete_board),
+            message = stringResource(R.string.delete_board_warning, board.title),
+            confirmLabel = stringResource(R.string.delete),
             onConfirm = {
                 viewModel.deleteBoard(board)
                 selectedBoardForDelete = null
@@ -577,9 +577,9 @@ fun MatrixScreen(
 
     selectedTaskForAction?.let { task ->
         MatrixConfirmDialog(
-            title = "Delete Task",
-            message = "Do you want to delete \"${task.title}\"?",
-            confirmLabel = "Delete",
+            title = stringResource(R.string.delete_task),
+            message = stringResource(R.string.delete_task_warning, task.title),
+            confirmLabel = stringResource(R.string.delete),
             onConfirm = {
                 viewModel.deleteTask(task)
                 selectedTaskForAction = null

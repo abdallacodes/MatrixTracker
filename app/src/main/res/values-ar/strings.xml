@@ -50,4 +50,30 @@
     <string name="start_streak_prompt">علم على عادتك اليوم لبدء سلسلة جديدة!</string>
     <string name="last_backup">آخر نسخة احتياطية: %1$s</string>
     <string name="no_backup_yet">لم يتم إنشاء نسخة احتياطية بعد</string>
+
+    <string name="habit_or_task">العادة / المهمة</string>
+    <string name="daily_total">الإجمالي اليومي</string>
+    <string name="note_prefix">ملاحظة: %1$s</string>
+    <string name="export_csv">تصدير اللوحة كـ CSV</string>
+    <string name="print_pdf">طباعة / حفظ كـ PDF</string>
+    <string name="share_pdf">مشاركة PDF</string>
+    <string name="backup_json">نسخ احتياطي للكل (JSON)</string>
+    <string name="restore_backup">استعادة من نسخة احتياطية</string>
+    <string name="edit_board_title">تعديل عنوان اللوحة</string>
+    <string name="board_title">عنوان اللوحة</string>
+    <string name="delete_board">حذف اللوحة</string>
+    <string name="delete_board_warning">هل أنت أكتد من حذف \"%1$s\"؟ سيتم حذف جميع مهامها وإدخالاتها.</string>
+    <string name="delete_task">حذف المهمة</string>
+    <string name="delete_task_warning">هل أنت أكتد من حذف \"%1$s\"؟</string>
+    <string name="delete">حذف</string>
+    <string name="create_new_board">إنشاء لوحة جديدة</string>
+    <string name="cadence_frequency">التكرار الدوري:</string>
+    <string name="create">إنشاء</string>
+    <string name="select_board">اختر اللوحة</string>
+    <string name="new_board">لوحة جديدة</string>
+    <string name="mark_all_done">تعليم الكل كتم</string>
+    <string name="clear_all">مسح الكل</string>
+    <string name="mark_past_7_days">تعليم آخر ٧ أيام كتم</string>
+    <string name="manage_task_options">خيارات المهمة</string>
+    <string name="today">اليوم</string>
 </resources>

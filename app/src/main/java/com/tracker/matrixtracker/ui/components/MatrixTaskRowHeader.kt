@@ -21,14 +21,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.tracker.matrixtracker.domain.model.Task
-
-import androidx.compose.ui.res.stringResource
 import com.tracker.matrixtracker.R
+import com.tracker.matrixtracker.domain.model.Task
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -95,7 +94,7 @@ fun MatrixTaskRowHeader(
             }
             if (onMarkPast7DaysDone != null) {
                 DropdownMenuItem(
-                    text = { Text("Mark Past 7 Days Done") },
+                    text = { Text(stringResource(R.string.mark_past_7_days)) },
                     onClick = {
                         isMenuExpanded = false
                         onMarkPast7DaysDone()
@@ -104,7 +103,7 @@ fun MatrixTaskRowHeader(
             }
             if (onLongClick != null) {
                 DropdownMenuItem(
-                    text = { Text("Manage Task Options") },
+                    text = { Text(stringResource(R.string.manage_task_options)) },
                     onClick = {
                         isMenuExpanded = false
                         onLongClick()

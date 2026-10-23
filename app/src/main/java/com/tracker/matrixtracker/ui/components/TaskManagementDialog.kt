@@ -20,9 +20,11 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.tracker.matrixtracker.R
 import com.tracker.matrixtracker.domain.model.Task
 
 @Composable
@@ -35,7 +37,7 @@ fun TaskManagementDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Manage Tasks") },
+        title = { Text(stringResource(R.string.manage_tasks)) },
         text = {
             Column(
                 modifier = Modifier.fillMaxWidth()
@@ -92,7 +94,7 @@ fun TaskManagementDialog(
                                     ) {
                                         Icon(
                                             imageVector = Icons.Default.Delete,
-                                            contentDescription = "Delete Task",
+                                            contentDescription = stringResource(R.string.delete_task),
                                             tint = MaterialTheme.colorScheme.error
                                         )
                                     }
@@ -105,7 +107,7 @@ fun TaskManagementDialog(
         },
         confirmButton = {
             TextButton(onClick = onDismiss) {
-                Text("Done")
+                Text(stringResource(R.string.done))
             }
         },
         modifier = modifier

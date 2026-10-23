@@ -20,9 +20,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.tracker.matrixtracker.R
 import com.tracker.matrixtracker.domain.model.BoardCadence
 import com.tracker.matrixtracker.ui.components.core.MatrixBottomSheet
 import com.tracker.matrixtracker.ui.components.core.MatrixTextField
@@ -44,7 +46,7 @@ fun CreateBoardDialog(
 
     MatrixBottomSheet(
         onDismissRequest = onDismiss,
-        title = "Create New Board",
+        title = stringResource(R.string.create_new_board),
         modifier = modifier
     ) {
         Column(
@@ -54,13 +56,13 @@ fun CreateBoardDialog(
             MatrixTextField(
                 value = title,
                 onValueChange = { title = it },
-                placeholder = "Board Title",
+                placeholder = stringResource(R.string.board_title),
                 singleLine = true,
                 focusRequester = focusRequester
             )
 
             Text(
-                text = "Cadence Frequency:",
+                text = stringResource(R.string.cadence_frequency),
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Medium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -90,7 +92,7 @@ fun CreateBoardDialog(
                 modifier = Modifier.fillMaxWidth().height(48.dp)
             ) {
                 Text(
-                    text = "Create",
+                    text = stringResource(R.string.create),
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold
                 )

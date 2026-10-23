@@ -22,10 +22,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.tracker.matrixtracker.R
 import com.tracker.matrixtracker.ui.matrix.PeriodHeader
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -105,7 +107,7 @@ fun MatrixHeaderCell(
         ) {
             if (onMarkAllDone != null) {
                 DropdownMenuItem(
-                    text = { Text("Mark All Done") },
+                    text = { Text(stringResource(R.string.mark_all_done)) },
                     onClick = {
                         isMenuExpanded = false
                         onMarkAllDone()
@@ -114,7 +116,7 @@ fun MatrixHeaderCell(
             }
             if (onClearAll != null) {
                 DropdownMenuItem(
-                    text = { Text("Clear All") },
+                    text = { Text(stringResource(R.string.clear_all)) },
                     onClick = {
                         isMenuExpanded = false
                         onClearAll()
