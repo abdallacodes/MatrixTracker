@@ -3,14 +3,12 @@ package com.tracker.matrixtracker
 import android.content.res.Configuration
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.app.AppCompatDelegate
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -19,7 +17,6 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
-import androidx.core.os.LocaleListCompat
 import androidx.room.Room
 import com.tracker.matrixtracker.data.local.AppDatabase
 import com.tracker.matrixtracker.data.repository.AppSettings
@@ -51,15 +48,6 @@ class MainActivity : AppCompatActivity() {
         setContent {
             val settingsState by settingsRepository.settingsFlow.collectAsState(initial = AppSettings())
             val appLanguage = settingsState.appLanguage.ifBlank { "en" }
-
-            LaunchedEffect(appLanguage) {
-                val currentLocales = AppCompatDelegate.getApplicationLocales()
-                if (currentLocales.toLanguageTags() != appLanguage) {
-                    AppCompatDelegate.setApplicationLocales(
-                        LocaleListCompat.forLanguageTags(appLanguage)
-                    )
-                }
-            }
 
             val localizedContext = remember(appLanguage) {
                 val locale = Locale.forLanguageTag(appLanguage)
