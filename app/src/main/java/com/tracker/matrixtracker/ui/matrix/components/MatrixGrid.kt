@@ -1,8 +1,5 @@
 package com.tracker.matrixtracker.ui.matrix.components
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
@@ -20,19 +17,14 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.AssistChip
-import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -53,7 +45,6 @@ import com.tracker.matrixtracker.ui.components.MatrixHeaderCell
 import com.tracker.matrixtracker.ui.components.MatrixStatusCell
 import com.tracker.matrixtracker.ui.components.MatrixTaskRowHeader
 import com.tracker.matrixtracker.ui.matrix.PeriodHeader
-import kotlinx.coroutines.launch
 
 @Composable
 fun MatrixGrid(
@@ -63,6 +54,7 @@ fun MatrixGrid(
     taskCompletionPercentage: Map<Long, Float>,
     periodCompletionPercentage: Map<String, Float>,
     dragGestureEnabled: Boolean = true,
+    scrollToTodayTrigger: Int = 0,
     onToggleCell: (taskId: Long, periodKey: String) -> Unit,
     onBatchMarkCells: (taskId: Long, periodKeys: List<String>, status: CellStatus) -> Unit,
     onMarkAllHabitsForPeriod: (periodKey: String, status: CellStatus) -> Unit,
@@ -76,7 +68,6 @@ fun MatrixGrid(
     val horizontalScrollState = rememberScrollState()
     val haptic = LocalHapticFeedback.current
     val density = LocalDensity.current
-    val scope = rememberCoroutineScope()
 
     val cellWidthPx = with(density) { 48.dp.toPx() }
     var draggedTaskId by remember { mutableStateOf<Long?>(null) }
@@ -85,15 +76,6 @@ fun MatrixGrid(
 
     val todayIndex = periods.indexOfFirst { it.isCurrent }
 
-    fun scrollToToday() {
-        if (todayIndex >= 0) {
-            val targetScrollPx = ((todayIndex - 2) * cellWidthPx).coerceAtLeast(0f).toInt()
-            scope.launch {
-                horizontalScrollState.animateScrollTo(targetScrollPx)
-            }
-        }
-    }
-
     LaunchedEffect(periods) {
         if (todayIndex >= 0) {
             val targetScrollPx = ((todayIndex - 2) * cellWidthPx).coerceAtLeast(0f).toInt()
@@ -101,14 +83,10 @@ fun MatrixGrid(
         }
     }
 
-    val isTodayVisible by remember(todayIndex) {
-        derivedStateOf {
-            if (todayIndex < 0) true
-            else {
-                val todayPx = todayIndex * cellWidthPx
-                val scrollPos = horizontalScrollState.value.toFloat()
-                todayPx >= (scrollPos - cellWidthPx) && todayPx <= (scrollPos + 600f)
-            }
+    LaunchedEffect(scrollToTodayTrigger) {
+        if (scrollToTodayTrigger > 0 && todayIndex >= 0) {
+            val targetScrollPx = ((todayIndex - 2) * cellWidthPx).coerceAtLeast(0f).toInt()
+            horizontalScrollState.animateScrollTo(targetScrollPx)
         }
     }
 
@@ -340,31 +318,6 @@ fun MatrixGrid(
                     }
                 }
             }
-        }
-
-        AnimatedVisibility(
-            visible = !isTodayVisible,
-            enter = fadeIn(),
-            exit = fadeOut(),
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(top = 54.dp, end = 12.dp)
-        ) {
-            AssistChip(
-                onClick = { scrollToToday() },
-                label = {
-                    Text(
-                        text = "🎯 " + stringResource(R.string.today),
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                },
-                shape = CircleShape,
-                colors = AssistChipDefaults.assistChipColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    labelColor = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-            )
         }
     }
 }
