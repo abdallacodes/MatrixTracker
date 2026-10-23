@@ -2,10 +2,10 @@ package com.tracker.matrixtracker
 
 import android.content.res.Configuration
 import android.os.Bundle
-import androidx.activity.ComponentActivity
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
@@ -16,6 +16,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.core.os.LocaleListCompat
@@ -29,7 +30,7 @@ import com.tracker.matrixtracker.ui.matrix.MatrixViewModel
 import com.tracker.matrixtracker.ui.theme.MatrixTrackerTheme
 import java.util.Locale
 
-class MainActivity : ComponentActivity() {
+class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -60,18 +61,21 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-            val locale = remember(appLanguage) { Locale.forLanguageTag(appLanguage) }
-            val currentConfig = LocalConfiguration.current
-            val updatedConfig = remember(currentConfig, locale) {
-                Configuration(currentConfig).apply {
+            val localizedContext = remember(appLanguage) {
+                val locale = Locale.forLanguageTag(appLanguage)
+                Locale.setDefault(locale)
+                val config = Configuration(resources.configuration).apply {
                     setLocale(locale)
                     setLayoutDirection(locale)
                 }
+                createConfigurationContext(config)
             }
+
             val layoutDirection = if (appLanguage == "ar") LayoutDirection.Rtl else LayoutDirection.Ltr
 
             CompositionLocalProvider(
-                LocalConfiguration provides updatedConfig,
+                LocalContext provides localizedContext,
+                LocalConfiguration provides localizedContext.resources.configuration,
                 LocalLayoutDirection provides layoutDirection
             ) {
                 MatrixTrackerTheme(themeMode = settingsState.themeMode) {

@@ -10,9 +10,9 @@ import java.util.Locale
 
 object PeriodUtils {
 
-    private val dayOfWeekFormatter = DateTimeFormatter.ofPattern("EEE d", Locale.US)
-    private val monthFormatter = DateTimeFormatter.ofPattern("MMM", Locale.US)
-    private val monthDayFormatter = DateTimeFormatter.ofPattern("MMM d", Locale.US)
+    private val dayOfWeekFormatter: DateTimeFormatter get() = DateTimeFormatter.ofPattern("EEE d", Locale.getDefault())
+    private val monthFormatter: DateTimeFormatter get() = DateTimeFormatter.ofPattern("MMM", Locale.getDefault())
+    private val monthDayFormatter: DateTimeFormatter get() = DateTimeFormatter.ofPattern("MMM d", Locale.getDefault())
 
     // --- Daily ---
 

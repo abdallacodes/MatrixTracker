@@ -9,23 +9,19 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.AssistChip
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.tracker.matrixtracker.R
 import com.tracker.matrixtracker.domain.model.Board
 import com.tracker.matrixtracker.domain.model.BoardCadence
 import java.time.YearMonth
@@ -45,7 +41,7 @@ fun PeriodNavigationBar(
     modifier: Modifier = Modifier,
 ) {
     val periodTitle = when (currentBoard?.cadence) {
-        BoardCadence.DAILY -> selectedYearMonth.format(DateTimeFormatter.ofPattern("MMMM yyyy", Locale.US))
+        BoardCadence.DAILY -> selectedYearMonth.format(DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault()))
         BoardCadence.WEEKLY, BoardCadence.MONTHLY -> "$selectedYear"
         null -> ""
     }
@@ -62,7 +58,7 @@ fun PeriodNavigationBar(
                 onClick = onOpenBoardSelection
             ) {
                 Text(
-                    text = currentBoard?.title ?: "Select Board",
+                    text = currentBoard?.title ?: stringResource(R.string.select_board),
                     fontWeight = FontWeight.Bold,
                     fontSize = 13.sp
                 )
@@ -96,7 +92,7 @@ fun PeriodNavigationBar(
 
             AssistChip(
                 onClick = onGoToCurrent,
-                label = { Text("Today", fontSize = 11.sp) },
+                label = { Text(stringResource(R.string.today), fontSize = 11.sp) },
                 modifier = Modifier.padding(start = 4.dp)
             )
         }
@@ -104,7 +100,7 @@ fun PeriodNavigationBar(
         IconButton(onClick = onAddNewTask) {
             Icon(
                 imageVector = Icons.Default.Add,
-                contentDescription = "Add Task",
+                contentDescription = stringResource(R.string.add_task),
                 tint = MaterialTheme.colorScheme.primary
             )
         }
