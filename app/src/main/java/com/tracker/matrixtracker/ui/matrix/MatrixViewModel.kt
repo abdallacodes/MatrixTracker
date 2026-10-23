@@ -21,6 +21,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.YearMonth
@@ -31,7 +32,8 @@ import com.tracker.matrixtracker.data.repository.SettingsRepository
 @OptIn(ExperimentalCoroutinesApi::class)
 class MatrixViewModel(
     private val repository: TrackerRepository,
-    private val settingsRepository: SettingsRepository
+    private val settingsRepository: SettingsRepository,
+    defaultDispatcher: CoroutineDispatcher = kotlinx.coroutines.Dispatchers.Default
 ) : ViewModel() {
 
     val settingsState: StateFlow<AppSettings> = settingsRepository.settingsFlow
@@ -154,7 +156,7 @@ class MatrixViewModel(
             }
         }
     }.flatMapLatest { it }
-        .flowOn(kotlinx.coroutines.Dispatchers.Default)
+        .flowOn(defaultDispatcher)
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),

@@ -8,6 +8,7 @@ import com.tracker.matrixtracker.data.repository.SettingsRepository
 import com.tracker.matrixtracker.data.repository.TrackerRepositoryImpl
 import com.tracker.matrixtracker.domain.model.BoardCadence
 import com.tracker.matrixtracker.domain.model.CellStatus
+import com.tracker.matrixtracker.util.WidgetUpdateHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
@@ -36,6 +37,7 @@ class MatrixViewModelTest {
 
     @Before
     fun setUp() {
+        WidgetUpdateHelper.disabledForTesting = true
         testDispatcher = UnconfinedTestDispatcher()
         Dispatchers.setMain(testDispatcher)
 
@@ -54,11 +56,12 @@ class MatrixViewModelTest {
             ApplicationProvider.getApplicationContext()
         )
 
-        viewModel = MatrixViewModel(repository, settingsRepository)
+        viewModel = MatrixViewModel(repository, settingsRepository, testDispatcher)
     }
 
     @After
     fun tearDown() {
+        WidgetUpdateHelper.disabledForTesting = false
         Dispatchers.resetMain()
         database.close()
     }
