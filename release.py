@@ -77,6 +77,49 @@ def get_next_version_tag(existing_tags):
     return next_tag
 
 
+def update_build_gradle(next_tag):
+    """Reads app/build.gradle.kts, finds current versionCode, increments it by 1, and bumps versionName to match next_tag."""
+    pattern = re.compile(r"^v(\d+)\.(\d+)\.(\d+)$")
+    match = pattern.match(next_tag)
+    version_name = f"{match.group(1)}.{match.group(2)}.{match.group(3)}" if match else next_tag.lstrip("v")
+
+    gradle_file_path = "app/build.gradle.kts"
+    try:
+        with open(gradle_file_path, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        vc_match = re.search(r'versionCode\s*=\s*(\d+)', content)
+        if vc_match:
+            current_code = int(vc_match.group(1))
+            new_version_code = current_code + 1
+        else:
+            new_version_code = 10007
+
+        if match:
+            major, minor, patch = map(int, match.groups())
+            calculated_code = major * 10000 + minor * 100 + patch
+            new_version_code = max(new_version_code, calculated_code)
+
+        new_content = re.sub(
+            r'versionCode\s*=\s*\d+',
+            f'versionCode = {new_version_code}',
+            content
+        )
+        new_content = re.sub(
+            r'versionName\s*=\s*"[^"]+"',
+            f'versionName = "{version_name}"',
+            new_content
+        )
+
+        with open(gradle_file_path, "w", encoding="utf-8") as f:
+            f.write(new_content)
+
+        print(f"📝 Updated {gradle_file_path}: versionCode = {new_version_code}, versionName = \"{version_name}\"")
+    except Exception as e:
+        print(f"❌ Failed to update {gradle_file_path}: {e}")
+        sys.exit(1)
+
+
 def publish_release(branch, new_tag):
     """Pushes commits and tag to remote repository."""
     print(f"🚀 Pushing branch '{branch}' to origin...")
@@ -104,6 +147,9 @@ def main():
     existing_tags = fetch_existing_tags()
     next_tag = get_next_version_tag(existing_tags)
     print(f"🎯 Calculated Next Tag: {next_tag}")
+
+    update_build_gradle(next_tag)
+    check_and_commit(f"chore: bump version to {next_tag}")
 
     publish_release(branch, next_tag)
 

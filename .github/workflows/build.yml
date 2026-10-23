@@ -32,9 +32,16 @@ jobs:
           cache: 'gradle'
 
       - name: Setup Keystore
+        env:
+          RELEASE_KEYSTORE_BASE64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
         run: |
           mkdir -p ~/.android
-          keytool -genkey -v -keystore ~/.android/debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
+          if [ -n "$RELEASE_KEYSTORE_BASE64" ]; then
+            echo "$RELEASE_KEYSTORE_BASE64" | base64 -d > ~/.android/release.keystore
+            echo "Persistent release keystore successfully unpacked."
+          else
+            echo "RELEASE_KEYSTORE_BASE64 secret is not set. A persistent keystore should be uploaded to repository secrets."
+          fi
 
       - name: Make Gradlew Executable
         run: chmod +x gradlew
@@ -43,6 +50,11 @@ jobs:
         run: ./gradlew test --stacktrace
 
       - name: Build Release APK
+        env:
+          KEYSTORE_FILE: /home/runner/.android/release.keystore
+          KEYSTORE_PASSWORD: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
         run: ./gradlew assembleRelease --stacktrace
 
       - name: Upload Release APK Artifact

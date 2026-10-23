@@ -48,4 +48,6 @@
     <string name="best_day">Best Day</string>
     <string name="active_streaks">Active Streaks</string>
     <string name="start_streak_prompt">Mark your habits today to start a streak!</string>
+    <string name="last_backup">Last Backup: %1$s</string>
+    <string name="no_backup_yet">No backup created yet</string>
 </resources>

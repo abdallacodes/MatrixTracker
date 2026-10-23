@@ -376,6 +376,31 @@ class MatrixViewModel(
         }
     }
 
+    fun performBackupNow(context: android.content.Context) {
+        viewModelScope.launch {
+            try {
+                val boards = repository.getBoards().first()
+                val allTasks = mutableListOf<Task>()
+                boards.forEach { b ->
+                    allTasks.addAll(repository.getTasksForBoard(b.id).first())
+                }
+                val allEntries = repository.getAllCellEntries().first()
+                val jsonText = com.tracker.matrixtracker.util.MatrixExportUtils.exportFullBackupJson(boards, allTasks, allEntries)
+
+                val targetDir = context.getExternalFilesDir(null) ?: context.filesDir
+                val backupFile = java.io.File(targetDir, com.tracker.matrixtracker.util.AutoBackupWorker.BACKUP_FILE_NAME)
+                backupFile.writeText(jsonText)
+
+                val now = System.currentTimeMillis()
+                settingsRepository.updateLastBackupTime(now)
+
+                android.widget.Toast.makeText(context, context.getString(com.tracker.matrixtracker.R.string.backup_exported_success), android.widget.Toast.LENGTH_SHORT).show()
+            } catch (_: Exception) {
+                android.widget.Toast.makeText(context, context.getString(com.tracker.matrixtracker.R.string.invalid_backup_file), android.widget.Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
     fun createFullBackup(context: android.content.Context) {
         viewModelScope.launch {
             val boards = repository.getBoards().first()

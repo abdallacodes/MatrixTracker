@@ -3,12 +3,16 @@ package com.tracker.matrixtracker.ui.components
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.FilterChip
@@ -24,6 +28,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -46,6 +52,29 @@ fun SettingsDialog(
     modifier: Modifier = Modifier,
 ) {
     var pendingRestoreUri by remember { mutableStateOf<Uri?>(null) }
+    val context = LocalContext.current
+
+    val backupFile = remember(settings.lastBackupTime) {
+        val targetDir = context.getExternalFilesDir(null) ?: context.filesDir
+        java.io.File(targetDir, com.tracker.matrixtracker.util.AutoBackupWorker.BACKUP_FILE_NAME)
+    }
+    val fileExists = backupFile.exists()
+    val lastModified = if (fileExists) backupFile.lastModified() else 0L
+    val effectiveBackupTime = maxOf(settings.lastBackupTime, lastModified)
+    val hasValidBackup = fileExists || effectiveBackupTime > 0L
+
+    val backupStatusText = if (hasValidBackup) {
+        val formattedDate = remember(effectiveBackupTime) {
+            val instant = java.time.Instant.ofEpochMilli(effectiveBackupTime)
+            val zonedDateTime = instant.atZone(java.time.ZoneId.systemDefault())
+            zonedDateTime.format(
+                java.time.format.DateTimeFormatter.ofPattern("d MMM yyyy, hh:mm a")
+            )
+        }
+        stringResource(R.string.last_backup, formattedDate)
+    } else {
+        stringResource(R.string.no_backup_yet)
+    }
 
     val todayStr = remember {
         java.time.LocalDate.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd"))
@@ -86,6 +115,27 @@ fun SettingsDialog(
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
                     )
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(8.dp)
+                                .background(
+                                    if (hasValidBackup) Color(0xFF4CAF50) else MaterialTheme.colorScheme.outline,
+                                    CircleShape
+                                )
+                        )
+                        Text(
+                            text = backupStatusText,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = if (hasValidBackup) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -193,7 +243,6 @@ fun SettingsDialog(
 
                     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         listOf(
-                            "SYSTEM" to stringResource(R.string.system_default),
                             "DARK" to stringResource(R.string.dark_mode),
                             "LIGHT" to stringResource(R.string.light_mode),
                             "AMOLED" to stringResource(R.string.amoled_accent)
@@ -218,7 +267,6 @@ fun SettingsDialog(
 
                     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         listOf(
-                            "SYSTEM" to stringResource(R.string.system_default),
                             "en" to stringResource(R.string.english),
                             "ar" to stringResource(R.string.arabic)
                         ).forEach { (langKey, label) ->

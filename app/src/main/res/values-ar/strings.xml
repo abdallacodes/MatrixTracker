@@ -48,4 +48,6 @@
     <string name="best_day">الأفضل</string>
     <string name="active_streaks">السلاسل النشطة</string>
     <string name="start_streak_prompt">علم على عادتك اليوم لبدء سلسلة جديدة!</string>
+    <string name="last_backup">آخر نسخة احتياطية: %1$s</string>
+    <string name="no_backup_yet">لم يتم إنشاء نسخة احتياطية بعد</string>
 </resources>

@@ -12,8 +12,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.TestDispatcher
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -65,19 +65,17 @@ class MatrixViewModelTest {
 
     @Test
     fun initialState_seedsDefaultBoardWhenDbEmpty() = runTest(testDispatcher) {
-        val job = backgroundScope.launch { viewModel.uiState.collect {} }
+        backgroundScope.launch { viewModel.uiState.collect {} }
 
         val state = viewModel.uiState.first { !it.isLoading && it.tasks.isNotEmpty() }
         assertNotNull(state.currentBoard)
         assertEquals("Daily Habits", state.currentBoard?.title)
         assertEquals(4, state.tasks.size)
-
-        job.cancel()
     }
 
     @Test
     fun toggleCell_updatesStateAndCalculatesProgress() = runTest(testDispatcher) {
-        val job = backgroundScope.launch { viewModel.uiState.collect {} }
+        backgroundScope.launch { viewModel.uiState.collect {} }
 
         val initialState = viewModel.uiState.first { !it.isLoading && it.tasks.isNotEmpty() }
         val firstTask = initialState.tasks.first()
@@ -92,13 +90,11 @@ class MatrixViewModelTest {
         assertEquals(CellStatus.DONE, updatedState.cells[Pair(firstTask.id, firstPeriod.key)]?.status)
         assertTrue(updatedState.taskCompletionPercentage[firstTask.id]!! > 0f)
         assertTrue(updatedState.periodCompletionPercentage[firstPeriod.key]!! > 0f)
-
-        job.cancel()
     }
 
     @Test
     fun periodNavigation_updatesSelectedYearMonth() = runTest(testDispatcher) {
-        val job = backgroundScope.launch { viewModel.uiState.collect {} }
+        backgroundScope.launch { viewModel.uiState.collect {} }
 
         val state1 = viewModel.uiState.first { !it.isLoading && it.tasks.isNotEmpty() }
         val initialYM = state1.selectedYearMonth
@@ -110,13 +106,11 @@ class MatrixViewModelTest {
         viewModel.previousPeriod()
         val statePrev = viewModel.uiState.first { it.selectedYearMonth == initialYM }
         assertEquals(initialYM, statePrev.selectedYearMonth)
-
-        job.cancel()
     }
 
     @Test
     fun taskManagement_addNewTaskDeleteTaskAndReorder() = runTest(testDispatcher) {
-        val job = backgroundScope.launch { viewModel.uiState.collect {} }
+        backgroundScope.launch { viewModel.uiState.collect {} }
 
         val state1 = viewModel.uiState.first { !it.isLoading && it.tasks.isNotEmpty() }
         val initialCount = state1.tasks.size
@@ -129,17 +123,15 @@ class MatrixViewModelTest {
         val stateReordered = viewModel.uiState.first { it.tasks[1].title == state1.tasks[0].title }
         assertEquals(state1.tasks[0].title, stateReordered.tasks[1].title)
 
-        val taskToDelete = stateWithNewTask.tasks.last()
+        val taskToDelete = stateReordered.tasks.last()
         viewModel.deleteTask(taskToDelete)
-        val stateAfterDelete = viewModel.uiState.first { it.tasks.none { t -> t.id == taskToDelete.id } }
+        val stateAfterDelete = viewModel.uiState.first { state -> state.tasks.none { t -> t.id == taskToDelete.id } }
         assertFalse(stateAfterDelete.tasks.any { it.id == taskToDelete.id })
-
-        job.cancel()
     }
 
     @Test
     fun taskManagement_renameTask() = runTest(testDispatcher) {
-        val job = backgroundScope.launch { viewModel.uiState.collect {} }
+        backgroundScope.launch { viewModel.uiState.collect {} }
 
         val initialState = viewModel.uiState.first { !it.isLoading && it.tasks.isNotEmpty() }
         val firstTask = initialState.tasks.first()
@@ -149,13 +141,11 @@ class MatrixViewModelTest {
             state.tasks.any { it.id == firstTask.id && it.title == "Renamed Habit" }
         }
         assertEquals("Renamed Habit", stateAfterRename.tasks.find { it.id == firstTask.id }?.title)
-
-        job.cancel()
     }
 
     @Test
     fun boardManagement_createUpdateAndDeleteBoard() = runTest(testDispatcher) {
-        val job = backgroundScope.launch { viewModel.uiState.collect {} }
+        backgroundScope.launch { viewModel.uiState.collect {} }
 
         val initialState = viewModel.uiState.first { !it.isLoading && it.tasks.isNotEmpty() }
         val initialBoardCount = initialState.availableBoards.size
@@ -173,13 +163,11 @@ class MatrixViewModelTest {
         viewModel.deleteBoard(createdBoard)
         val stateAfterDelete = viewModel.uiState.first { it.availableBoards.none { b -> b.id == createdBoard.id } }
         assertFalse(stateAfterDelete.availableBoards.any { it.id == createdBoard.id })
-
-        job.cancel()
     }
 
     @Test
     fun batchCellOperations_markAllHabitsAndRecentDays() = runTest(testDispatcher) {
-        val job = backgroundScope.launch { viewModel.uiState.collect {} }
+        backgroundScope.launch { viewModel.uiState.collect {} }
 
         val initialState = viewModel.uiState.first { !it.isLoading && it.tasks.isNotEmpty() }
         val periodKey = initialState.periods.first().key
@@ -206,13 +194,11 @@ class MatrixViewModelTest {
             state.cells.count { it.key.first == firstTask.id && it.value.status == CellStatus.DONE } >= 1
         }
         assertTrue(stateAfterRecent.cells.any { it.key.first == firstTask.id && it.value.status == CellStatus.DONE })
-
-        job.cancel()
     }
 
     @Test
     fun cellNoteOperations_setAndClearCellNote() = runTest(testDispatcher) {
-        val job = backgroundScope.launch { viewModel.uiState.collect {} }
+        backgroundScope.launch { viewModel.uiState.collect {} }
 
         val initialState = viewModel.uiState.first { !it.isLoading && it.tasks.isNotEmpty() }
         val firstTask = initialState.tasks.first()
@@ -229,13 +215,11 @@ class MatrixViewModelTest {
             state.cells[Pair(firstTask.id, periodKey)]?.note.isNullOrBlank()
         }
         assertTrue(stateAfterDeleteNote.cells[Pair(firstTask.id, periodKey)]?.note.isNullOrBlank())
-
-        job.cancel()
     }
 
     @Test
     fun exportAndImportDataFromJson_preservesDataIntegrity() = runTest(testDispatcher) {
-        val job = backgroundScope.launch { viewModel.uiState.collect {} }
+        backgroundScope.launch { viewModel.uiState.collect {} }
 
         val initialState = viewModel.uiState.first { !it.isLoading && it.tasks.isNotEmpty() }
         val firstTask = initialState.tasks.first()
@@ -253,7 +237,5 @@ class MatrixViewModelTest {
         val inputStream = java.io.ByteArrayInputStream(jsonBytes)
         val importResult = viewModel.importDataFromJson(inputStream)
         assertTrue(importResult.isSuccess)
-
-        job.cancel()
     }
 }

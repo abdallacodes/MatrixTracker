@@ -333,7 +333,7 @@ fun MatrixScreen(
             onUpdateDragGestureEnabled = viewModel::updateDragGestureEnabled,
             onUpdateThemeMode = viewModel::updateThemeMode,
             onUpdateAppLanguage = viewModel::updateAppLanguage,
-            onBackupNow = { viewModel.createFullBackup(context) },
+            onBackupNow = { viewModel.performBackupNow(context) },
             onExportBackupUri = { uri -> viewModel.exportBackupToUri(context, uri) },
             onRestoreBackupUri = { uri -> viewModel.restoreBackupFromUri(context, uri) },
             onDismiss = { showSettingsDialog = false }

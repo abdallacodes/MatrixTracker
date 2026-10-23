@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
@@ -15,8 +16,9 @@ data class AppSettings(
     val autoBackupEnabled: Boolean = true,
     val autoBackupIntervalDays: Int = 1,
     val dragGestureEnabled: Boolean = true,
-    val themeMode: String = "SYSTEM",
-    val appLanguage: String = "SYSTEM"
+    val themeMode: String = "DARK",
+    val appLanguage: String = "en",
+    val lastBackupTime: Long = 0L
 )
 
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "app_settings")
@@ -29,15 +31,23 @@ class SettingsRepository(private val context: Context) {
         val DRAG_GESTURE_ENABLED = booleanPreferencesKey("drag_gesture_enabled")
         val THEME_MODE = stringPreferencesKey("theme_mode")
         val APP_LANGUAGE = stringPreferencesKey("app_language")
+        val LAST_BACKUP_TIME = longPreferencesKey("last_backup_time")
     }
 
     val settingsFlow: Flow<AppSettings> = context.dataStore.data.map { prefs ->
+        val rawTheme = prefs[Keys.THEME_MODE] ?: "DARK"
+        val themeMode = if (rawTheme == "SYSTEM") "DARK" else rawTheme
+
+        val rawLang = prefs[Keys.APP_LANGUAGE] ?: "en"
+        val appLanguage = if (rawLang == "SYSTEM") "en" else rawLang
+
         AppSettings(
             autoBackupEnabled = prefs[Keys.AUTO_BACKUP_ENABLED] ?: true,
             autoBackupIntervalDays = prefs[Keys.AUTO_BACKUP_INTERVAL_DAYS] ?: 1,
             dragGestureEnabled = prefs[Keys.DRAG_GESTURE_ENABLED] ?: true,
-            themeMode = prefs[Keys.THEME_MODE] ?: "SYSTEM",
-            appLanguage = prefs[Keys.APP_LANGUAGE] ?: "SYSTEM"
+            themeMode = themeMode,
+            appLanguage = appLanguage,
+            lastBackupTime = prefs[Keys.LAST_BACKUP_TIME] ?: 0L
         )
     }
 
@@ -68,6 +78,12 @@ class SettingsRepository(private val context: Context) {
     suspend fun updateAppLanguage(language: String) {
         context.dataStore.edit { prefs ->
             prefs[Keys.APP_LANGUAGE] = language
+        }
+    }
+
+    suspend fun updateLastBackupTime(timestamp: Long) {
+        context.dataStore.edit { prefs ->
+            prefs[Keys.LAST_BACKUP_TIME] = timestamp
         }
     }
 }

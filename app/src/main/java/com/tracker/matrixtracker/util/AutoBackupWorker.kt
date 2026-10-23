@@ -8,6 +8,7 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.tracker.matrixtracker.data.local.AppDatabase
+import com.tracker.matrixtracker.data.repository.SettingsRepository
 import com.tracker.matrixtracker.data.repository.TrackerRepositoryImpl
 import com.tracker.matrixtracker.domain.model.Task
 import kotlinx.coroutines.flow.first
@@ -45,6 +46,9 @@ class AutoBackupWorker(
             val targetDir = context.getExternalFilesDir(null) ?: context.filesDir
             val backupFile = File(targetDir, BACKUP_FILE_NAME)
             backupFile.writeText(jsonText)
+
+            val settingsRepository = SettingsRepository(context.applicationContext)
+            settingsRepository.updateLastBackupTime(System.currentTimeMillis())
 
             Result.success()
         } catch (_: Exception) {
