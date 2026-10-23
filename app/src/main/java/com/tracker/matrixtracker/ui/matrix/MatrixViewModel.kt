@@ -33,13 +33,14 @@ import com.tracker.matrixtracker.data.repository.SettingsRepository
 class MatrixViewModel(
     private val repository: TrackerRepository,
     private val settingsRepository: SettingsRepository,
-    defaultDispatcher: CoroutineDispatcher = kotlinx.coroutines.Dispatchers.Default
+    defaultDispatcher: CoroutineDispatcher = kotlinx.coroutines.Dispatchers.Default,
+    sharingStarted: SharingStarted = SharingStarted.WhileSubscribed(5000)
 ) : ViewModel() {
 
     val settingsState: StateFlow<AppSettings> = settingsRepository.settingsFlow
         .stateIn(
             scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
+            started = sharingStarted,
             initialValue = AppSettings()
         )
 
@@ -159,7 +160,7 @@ class MatrixViewModel(
         .flowOn(defaultDispatcher)
         .stateIn(
             scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
+            started = sharingStarted,
             initialValue = MatrixUiState(isLoading = true)
         )
 

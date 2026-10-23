@@ -56,7 +56,12 @@ class MatrixViewModelTest {
             ApplicationProvider.getApplicationContext()
         )
 
-        viewModel = MatrixViewModel(repository, settingsRepository, testDispatcher)
+        viewModel = MatrixViewModel(
+            repository,
+            settingsRepository,
+            testDispatcher,
+            kotlinx.coroutines.flow.SharingStarted.Eagerly
+        )
     }
 
     @After
