@@ -18,8 +18,8 @@ android {
         applicationId = "com.tracker.matrixtracker"
         minSdk = 30
         targetSdk = 37
-        versionCode = 10013
-        versionName = "1.0.13"
+        versionCode = 10014
+        versionName = "1.0.14"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
