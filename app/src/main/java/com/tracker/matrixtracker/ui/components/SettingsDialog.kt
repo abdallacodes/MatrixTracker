@@ -290,25 +290,16 @@ fun SettingsDialog(
     )
 
     pendingRestoreUri?.let { uri ->
-        AlertDialog(
-            onDismissRequest = { pendingRestoreUri = null },
-            title = { Text(stringResource(R.string.restore_confirmation)) },
-            text = { Text(stringResource(R.string.restore_warning)) },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        onRestoreBackupUri(uri)
-                        pendingRestoreUri = null
-                    }
-                ) {
-                    Text(stringResource(R.string.restore_backup_file))
-                }
+        com.tracker.matrixtracker.ui.components.core.MatrixConfirmDialog(
+            title = stringResource(R.string.restore_confirmation),
+            message = stringResource(R.string.restore_warning),
+            confirmLabel = stringResource(R.string.restore_backup_file),
+            onConfirm = {
+                onRestoreBackupUri(uri)
+                pendingRestoreUri = null
             },
-            dismissButton = {
-                TextButton(onClick = { pendingRestoreUri = null }) {
-                    Text(stringResource(R.string.cancel))
-                }
-            }
+            onDismiss = { pendingRestoreUri = null },
+            isDestructive = false
         )
     }
 }

@@ -1,9 +1,15 @@
 package com.tracker.matrixtracker.ui.components
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material3.AlertDialog
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -14,10 +20,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.tracker.matrixtracker.R
+import com.tracker.matrixtracker.ui.components.core.MatrixBottomSheet
+import com.tracker.matrixtracker.ui.components.core.MatrixTextField
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CellNoteDialog(
     periodKey: String,
@@ -40,48 +50,60 @@ fun CellNoteDialog(
         stringResource(R.string.edit_note)
     }
 
-    AlertDialog(
+    MatrixBottomSheet(
         onDismissRequest = onDismiss,
-        title = { Text("$dialogTitle ($periodKey)") },
-        text = {
-            OutlinedTextField(
+        title = "$dialogTitle ($periodKey)",
+        modifier = modifier
+    ) {
+        Column(
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            MatrixTextField(
                 value = note,
                 onValueChange = { note = it },
-                label = { Text(stringResource(R.string.cell_note)) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .focusRequester(focusRequester),
+                placeholder = stringResource(R.string.cell_note),
+                singleLine = false,
+                maxLines = 4,
+                focusRequester = focusRequester
             )
-        },
-        confirmButton = {
-            TextButton(
-                onClick = {
-                    onSaveNote(note)
-                    onDismiss()
-                }
+
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Text(stringResource(R.string.save))
-            }
-        },
-        dismissButton = {
-            if (initialNote.isNotBlank()) {
-                TextButton(
-                    onClick = {
-                        onDeleteNote()
-                        onDismiss()
+                if (initialNote.isNotBlank()) {
+                    TextButton(
+                        onClick = {
+                            onDeleteNote()
+                            onDismiss()
+                        },
+                        modifier = Modifier.weight(1f).height(48.dp)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.delete_note),
+                            color = MaterialTheme.colorScheme.error,
+                            fontSize = 14.sp
+                        )
                     }
+                }
+
+                Button(
+                    onClick = {
+                        onSaveNote(note)
+                        onDismiss()
+                    },
+                    shape = CircleShape,
+                    modifier = Modifier.weight(1f).height(48.dp)
                 ) {
                     Text(
-                        text = stringResource(R.string.delete_note),
-                        color = MaterialTheme.colorScheme.error
+                        text = stringResource(R.string.save),
+                        fontSize = 14.sp
                     )
                 }
-            } else {
-                TextButton(onClick = onDismiss) {
-                    Text(stringResource(R.string.cancel))
-                }
             }
-        },
-        modifier = modifier
-    )
+
+            Spacer(modifier = Modifier.height(12.dp))
+        }
+    }
 }

@@ -1,10 +1,14 @@
 package com.tracker.matrixtracker.ui.components
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.OutlinedTextField
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -13,11 +17,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.tracker.matrixtracker.R
 import com.tracker.matrixtracker.domain.model.Task
+import com.tracker.matrixtracker.ui.components.core.MatrixBottomSheet
+import com.tracker.matrixtracker.ui.components.core.MatrixTextField
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditTaskDialog(
     task: Task,
@@ -32,37 +41,41 @@ fun EditTaskDialog(
         focusRequester.requestFocus()
     }
 
-    AlertDialog(
+    MatrixBottomSheet(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.edit_task)) },
-        text = {
-            OutlinedTextField(
+        title = stringResource(R.string.edit_task),
+        modifier = modifier
+    ) {
+        Column(
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            MatrixTextField(
                 value = title,
                 onValueChange = { title = it },
-                label = { Text(stringResource(R.string.task_name)) },
+                placeholder = stringResource(R.string.task_name),
                 singleLine = true,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .focusRequester(focusRequester),
+                focusRequester = focusRequester
             )
-        },
-        confirmButton = {
-            TextButton(
+
+            Button(
                 onClick = {
                     if (title.isNotBlank()) {
-                        onSave(title)
+                        onSave(title.trim())
                         onDismiss()
                     }
-                }
+                },
+                shape = CircleShape,
+                modifier = Modifier.fillMaxWidth().height(48.dp)
             ) {
-                Text(stringResource(R.string.save))
+                Text(
+                    text = stringResource(R.string.save),
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold
+                )
             }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.cancel))
-            }
-        },
-        modifier = modifier
-    )
+
+            Spacer(modifier = Modifier.height(12.dp))
+        }
+    }
 }

@@ -1,19 +1,25 @@
 package com.tracker.matrixtracker.ui.matrix
 
+import android.app.Activity
+import android.content.pm.ActivityInfo
 import android.content.res.Configuration
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -22,13 +28,13 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -37,6 +43,15 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.graphics.Color
+import com.tracker.matrixtracker.ui.components.core.MatrixBottomSheet
+import com.tracker.matrixtracker.ui.components.core.MatrixConfirmDialog
+import com.tracker.matrixtracker.ui.components.core.MatrixTextField
+import androidx.compose.ui.graphics.PathFillType
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -57,6 +72,50 @@ import com.tracker.matrixtracker.ui.matrix.components.MatrixGrid
 import com.tracker.matrixtracker.ui.matrix.components.PeriodNavigationBar
 import kotlinx.coroutines.launch
 
+private val ScreenRotationIcon: ImageVector
+    get() {
+        if (_screenRotationIcon != null) return _screenRotationIcon!!
+        _screenRotationIcon = ImageVector.Builder(
+            name = "ScreenRotation",
+            defaultWidth = 24.dp,
+            defaultHeight = 24.dp,
+            viewportWidth = 24f,
+            viewportHeight = 24f
+        ).apply {
+            path(
+                fill = SolidColor(Color.Unspecified),
+                stroke = SolidColor(Color.Unspecified),
+                pathFillType = PathFillType.NonZero
+            ) {
+                moveTo(16.48f, 2.52f)
+                lineTo(12.73f, 6.27f)
+                lineTo(14.14f, 7.68f)
+                lineTo(16.0f, 5.83f)
+                verticalLineTo(12.0f)
+                horizontalLineTo(18.0f)
+                verticalLineTo(5.83f)
+                lineTo(19.86f, 7.68f)
+                lineTo(21.27f, 6.27f)
+                lineTo(17.52f, 2.52f)
+                close()
+                moveTo(10.27f, 21.48f)
+                lineTo(14.02f, 17.73f)
+                lineTo(12.61f, 16.32f)
+                lineTo(10.75f, 18.17f)
+                verticalLineTo(12.0f)
+                horizontalLineTo(8.75f)
+                verticalLineTo(18.17f)
+                lineTo(6.89f, 16.32f)
+                lineTo(5.48f, 17.73f)
+                lineTo(9.23f, 21.48f)
+                close()
+            }
+        }.build()
+        return _screenRotationIcon!!
+    }
+
+private var _screenRotationIcon: ImageVector? = null
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MatrixScreen(
@@ -64,12 +123,23 @@ fun MatrixScreen(
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
+    val activity = context as? Activity
     val scope = rememberCoroutineScope()
     val uiState by viewModel.uiState.collectAsState()
     val settingsState by viewModel.settingsState.collectAsState()
 
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+
+    fun toggleOrientation() {
+        if (activity != null) {
+            if (isLandscape) {
+                activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+            } else {
+                activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+            }
+        }
+    }
 
     var isOverflowMenuExpanded by remember { mutableStateOf(false) }
 
@@ -151,18 +221,33 @@ fun MatrixScreen(
                 )
             }
 
-            FloatingActionButton(
-                onClick = { showSettingsDialog = true },
-                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.65f),
-                contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
                     .padding(12.dp)
             ) {
-                Icon(
-                    imageVector = Icons.Default.Settings,
-                    contentDescription = stringResource(R.string.settings)
-                )
+                FloatingActionButton(
+                    onClick = { toggleOrientation() },
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.65f),
+                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                ) {
+                    Icon(
+                        imageVector = ScreenRotationIcon,
+                        contentDescription = "Exit Landscape"
+                    )
+                }
+
+                FloatingActionButton(
+                    onClick = { showSettingsDialog = true },
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.65f),
+                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Settings,
+                        contentDescription = stringResource(R.string.settings)
+                    )
+                }
             }
         }
     } else {
@@ -172,11 +257,18 @@ fun MatrixScreen(
                     title = {
                         Text(
                             text = stringResource(R.string.app_name),
-                            fontWeight = FontWeight.Bold,
+                            fontWeight = FontWeight.SemiBold,
                             fontSize = 18.sp
                         )
                     },
                     actions = {
+                        IconButton(onClick = { toggleOrientation() }) {
+                            Icon(
+                                imageVector = ScreenRotationIcon,
+                                contentDescription = "Switch Orientation"
+                            )
+                        }
+
                         IconButton(onClick = { showSettingsDialog = true }) {
                             Icon(
                                 imageVector = Icons.Default.Settings,
@@ -247,7 +339,7 @@ fun MatrixScreen(
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+                        containerColor = MaterialTheme.colorScheme.background
                     )
                 )
             },
@@ -278,9 +370,7 @@ fun MatrixScreen(
                     }
                 } else {
                     Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .verticalScroll(rememberScrollState())
+                        modifier = Modifier.fillMaxSize()
                     ) {
                         MatrixGrid(
                             tasks = uiState.tasks,
@@ -310,7 +400,8 @@ fun MatrixScreen(
                             },
                             onRenameTask = { task ->
                                 selectedTaskForEdit = task
-                            }
+                            },
+                            modifier = Modifier.weight(1f)
                         )
 
                         ConsistencyDashboard(
@@ -365,58 +456,57 @@ fun MatrixScreen(
     }
 
     selectedBoardForEdit?.let { board ->
-        AlertDialog(
+        val editBoardFocusRequester = remember { FocusRequester() }
+        LaunchedEffect(Unit) {
+            editBoardFocusRequester.requestFocus()
+        }
+
+        MatrixBottomSheet(
             onDismissRequest = { selectedBoardForEdit = null },
-            title = { Text("Edit Board Title") },
-            text = {
-                OutlinedTextField(
+            title = "Edit Board Title"
+        ) {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                MatrixTextField(
                     value = editBoardTitle,
                     onValueChange = { editBoardTitle = it },
-                    label = { Text("Board Title") },
+                    placeholder = "Board Title",
                     singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
+                    focusRequester = editBoardFocusRequester
                 )
-            },
-            confirmButton = {
-                TextButton(
+
+                Button(
                     onClick = {
                         if (editBoardTitle.isNotBlank()) {
-                            viewModel.updateBoard(board, editBoardTitle)
+                            viewModel.updateBoard(board, editBoardTitle.trim())
                             selectedBoardForEdit = null
                         }
-                    }
+                    },
+                    shape = CircleShape,
+                    modifier = Modifier.fillMaxWidth().height(48.dp)
                 ) {
-                    Text("Save")
+                    Text("Save", fontSize = 14.sp, fontWeight = FontWeight.Bold)
                 }
-            },
-            dismissButton = {
-                TextButton(onClick = { selectedBoardForEdit = null }) {
-                    Text("Cancel")
-                }
+
+                Spacer(modifier = Modifier.height(12.dp))
             }
-        )
+        }
     }
 
     selectedBoardForDelete?.let { board ->
-        AlertDialog(
-            onDismissRequest = { selectedBoardForDelete = null },
-            title = { Text("Delete Board") },
-            text = { Text("Are you sure you want to delete \"${board.title}\"? All its tasks and matrix entries will be removed.") },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        viewModel.deleteBoard(board)
-                        selectedBoardForDelete = null
-                    }
-                ) {
-                    Text("Delete", color = MaterialTheme.colorScheme.error)
-                }
+        MatrixConfirmDialog(
+            title = "Delete Board",
+            message = "Are you sure you want to delete \"${board.title}\"? All its tasks and matrix entries will be removed.",
+            confirmLabel = "Delete",
+            onConfirm = {
+                viewModel.deleteBoard(board)
+                selectedBoardForDelete = null
             },
-            dismissButton = {
-                TextButton(onClick = { selectedBoardForDelete = null }) {
-                    Text("Cancel")
-                }
-            }
+            onDismiss = { selectedBoardForDelete = null },
+            icon = androidx.compose.material.icons.Icons.Default.Delete,
+            isDestructive = true
         )
     }
 
@@ -441,59 +531,62 @@ fun MatrixScreen(
     }
 
     if (showAddTaskDialog) {
-        AlertDialog(
+        val addTaskFocusRequester = remember { FocusRequester() }
+        LaunchedEffect(Unit) {
+            addTaskFocusRequester.requestFocus()
+        }
+
+        MatrixBottomSheet(
             onDismissRequest = { showAddTaskDialog = false },
-            title = { Text("Add New Habit / Task") },
-            text = {
-                OutlinedTextField(
+            title = stringResource(R.string.add_task)
+        ) {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                MatrixTextField(
                     value = newTaskTitle,
                     onValueChange = { newTaskTitle = it },
-                    label = { Text("Task Title") },
+                    placeholder = stringResource(R.string.task_name),
                     singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
+                    focusRequester = addTaskFocusRequester
                 )
-            },
-            confirmButton = {
-                TextButton(
+
+                Button(
                     onClick = {
                         if (newTaskTitle.isNotBlank()) {
-                            viewModel.addNewTask(newTaskTitle)
+                            viewModel.addNewTask(newTaskTitle.trim())
                             newTaskTitle = ""
                             showAddTaskDialog = false
                         }
-                    }
+                    },
+                    shape = CircleShape,
+                    modifier = Modifier.fillMaxWidth().height(48.dp)
                 ) {
-                    Text("Add")
+                    Text(
+                        text = stringResource(R.string.add_task),
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
-            },
-            dismissButton = {
-                TextButton(onClick = { showAddTaskDialog = false }) {
-                    Text("Cancel")
-                }
+
+                Spacer(modifier = Modifier.height(12.dp))
             }
-        )
+        }
     }
 
     selectedTaskForAction?.let { task ->
-        AlertDialog(
-            onDismissRequest = { selectedTaskForAction = null },
-            title = { Text("Manage Task") },
-            text = { Text("Do you want to delete \"${task.title}\"?") },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        viewModel.deleteTask(task)
-                        selectedTaskForAction = null
-                    }
-                ) {
-                    Text("Delete", color = MaterialTheme.colorScheme.error)
-                }
+        MatrixConfirmDialog(
+            title = "Delete Task",
+            message = "Do you want to delete \"${task.title}\"?",
+            confirmLabel = "Delete",
+            onConfirm = {
+                viewModel.deleteTask(task)
+                selectedTaskForAction = null
             },
-            dismissButton = {
-                TextButton(onClick = { selectedTaskForAction = null }) {
-                    Text("Cancel")
-                }
-            }
+            onDismiss = { selectedTaskForAction = null },
+            icon = androidx.compose.material.icons.Icons.Default.Delete,
+            isDestructive = true
         )
     }
 
