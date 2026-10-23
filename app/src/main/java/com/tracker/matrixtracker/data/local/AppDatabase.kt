@@ -1,6 +1,8 @@
 package com.tracker.matrixtracker.data.local
 
+import android.content.Context
 import androidx.room.Database
+import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.tracker.matrixtracker.data.local.dao.BoardDao
@@ -24,4 +26,21 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun boardDao(): BoardDao
     abstract fun taskDao(): TaskDao
     abstract fun cellEntryDao(): CellEntryDao
+
+    companion object {
+        @Volatile
+        private var INSTANCE: AppDatabase? = null
+
+        fun getInstance(context: Context): AppDatabase {
+            return INSTANCE ?: synchronized(this) {
+                INSTANCE ?: Room.databaseBuilder(
+                    context.applicationContext,
+                    AppDatabase::class.java,
+                    "matrix_tracker.db"
+                ).fallbackToDestructiveMigration(dropAllTables = true).build().also {
+                    INSTANCE = it
+                }
+            }
+        }
+    }
 }

@@ -61,11 +61,7 @@ class ToggleTaskAction : ActionCallback {
         val nextStatus = if (currentStatus == CellStatus.DONE) CellStatus.EMPTY else CellStatus.DONE
         val todayKey = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE)
 
-        val db = Room.databaseBuilder(
-            context.applicationContext,
-            AppDatabase::class.java,
-            "matrix_tracker.db"
-        ).fallbackToDestructiveMigration(dropAllTables = true).build()
+        val db = AppDatabase.getInstance(context)
 
         val repository = TrackerRepositoryImpl(
             boardDao = db.boardDao(),
@@ -82,11 +78,7 @@ class ToggleTaskAction : ActionCallback {
 class MatrixWidget : GlanceAppWidget() {
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
-        val db = Room.databaseBuilder(
-            context.applicationContext,
-            AppDatabase::class.java,
-            "matrix_tracker.db"
-        ).fallbackToDestructiveMigration(dropAllTables = true).build()
+        val db = AppDatabase.getInstance(context)
 
         val repository = TrackerRepositoryImpl(
             boardDao = db.boardDao(),

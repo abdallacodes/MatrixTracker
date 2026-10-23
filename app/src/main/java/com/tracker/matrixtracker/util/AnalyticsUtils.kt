@@ -103,7 +103,7 @@ object AnalyticsUtils {
 
         val day = bestDay
         return if (day != null) {
-            val dayName = day.getDisplayName(TextStyle.FULL, Locale.US)
+            val dayName = day.getDisplayName(TextStyle.FULL, Locale.getDefault())
             Pair(dayName, bestPercent)
         } else null
     }

@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
@@ -47,7 +48,7 @@ fun MatrixTaskRowHeader(
                 .width(155.dp)
                 .height(44.dp)
                 .background(MaterialTheme.colorScheme.surface)
-                .border(0.5.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+                .border(0.5.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f))
                 .combinedClickable(
                     onClick = {},
                     onLongClick = {
@@ -68,20 +69,31 @@ fun MatrixTaskRowHeader(
                 fontWeight = FontWeight.Bold,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Start,
                 modifier = Modifier.weight(1f)
             )
+
+            Box(
+                modifier = Modifier
+                    .padding(horizontal = 4.dp)
+                    .width(1.dp)
+                    .height(20.dp)
+                    .background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
+            )
+
             Text(
                 text = "${progressPercentage.toInt()}%",
                 fontSize = 10.sp,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(start = 4.dp)
+                color = MaterialTheme.colorScheme.primary
             )
         }
 
         DropdownMenu(
             expanded = isMenuExpanded,
-            onDismissRequest = { isMenuExpanded = false }
+            onDismissRequest = { isMenuExpanded = false },
+            containerColor = MaterialTheme.colorScheme.surface,
+            shape = RoundedCornerShape(16.dp)
         ) {
             if (onRenameTask != null) {
                 DropdownMenuItem(

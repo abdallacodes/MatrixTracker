@@ -14,8 +14,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -105,7 +103,7 @@ fun MatrixGrid(
                         .width(155.dp)
                         .height(48.dp)
                         .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
-                        .border(0.5.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+                        .border(0.5.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f))
                         .padding(8.dp),
                     contentAlignment = Alignment.CenterStart
                 ) {
@@ -113,7 +111,8 @@ fun MatrixGrid(
                         text = stringResource(R.string.habit_or_task),
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Start
                     )
                 }
 
@@ -130,9 +129,16 @@ fun MatrixGrid(
 
                     Box(
                         modifier = Modifier
+                            .width(2.dp)
+                            .height(48.dp)
+                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.4f))
+                    )
+
+                    Box(
+                        modifier = Modifier
                             .size(width = 48.dp, height = 48.dp)
-                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
-                            .border(0.5.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)),
+                            .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.25f))
+                            .border(0.5.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f)),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
@@ -145,14 +151,13 @@ fun MatrixGrid(
                 }
             }
 
-            // Virtualized Body (LazyColumn)
-            LazyColumn(
+            // Body Column
+            Column(
                 modifier = Modifier
-                    .weight(1f)
                     .fillMaxWidth()
                     .background(MaterialTheme.colorScheme.surface)
             ) {
-                items(tasks, key = { it.id }) { task ->
+                tasks.forEach { task ->
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -171,7 +176,7 @@ fun MatrixGrid(
                             modifier = Modifier
                                 .width(1.5.dp)
                                 .fillMaxHeight()
-                                .background(MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
+                                .background(MaterialTheme.colorScheme.outline.copy(alpha = 0.25f))
                         )
 
                         Row(
@@ -202,8 +207,13 @@ fun MatrixGrid(
                                                     if (draggedTaskId == task.id) {
                                                         val start = minOf(dragStartIndex, dragEndIndex)
                                                         val end = maxOf(dragStartIndex, dragEndIndex)
-                                                        val keys = (start..end).map { periods[it].key }
-                                                        onBatchMarkCells(task.id, keys, CellStatus.DONE)
+                                                        val validKeys = (start..end)
+                                                            .map { periods[it] }
+                                                            .filter { !it.isFuture }
+                                                            .map { it.key }
+                                                        if (validKeys.isNotEmpty()) {
+                                                            onBatchMarkCells(task.id, validKeys, CellStatus.DONE)
+                                                        }
                                                     }
                                                     draggedTaskId = null
                                                 },
@@ -224,7 +234,9 @@ fun MatrixGrid(
                                     MatrixStatusCell(
                                         entry = entry,
                                         onToggle = { onToggleCell(task.id, period.key) },
-                                        onLongClick = { onCellLongClick(task.id, period.key) }
+                                        onLongClick = { onCellLongClick(task.id, period.key) },
+                                        isFuture = period.isFuture,
+                                        colIndex = colIndex
                                     )
 
                                     if (isHighlighted) {
@@ -240,9 +252,16 @@ fun MatrixGrid(
 
                             Box(
                                 modifier = Modifier
+                                    .width(2.dp)
+                                    .fillMaxHeight()
+                                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.4f))
+                            )
+
+                            Box(
+                                modifier = Modifier
                                     .size(width = 48.dp, height = 44.dp)
-                                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f))
-                                    .border(0.5.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)),
+                                    .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.25f))
+                                    .border(0.5.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f)),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
@@ -256,65 +275,73 @@ fun MatrixGrid(
                     }
                 }
 
-                item(key = "daily_total_summary") {
+                // Daily total summary row
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(36.dp)
+                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .width(155.dp)
+                            .height(36.dp)
+                            .border(0.5.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f))
+                            .padding(horizontal = 8.dp),
+                        contentAlignment = Alignment.CenterStart
+                    ) {
+                        Text(
+                            text = stringResource(R.string.daily_total),
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Start
+                        )
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .width(1.5.dp)
+                            .fillMaxHeight()
+                            .background(MaterialTheme.colorScheme.outline.copy(alpha = 0.25f))
+                    )
+
                     Row(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .height(36.dp)
-                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+                            .weight(1f)
+                            .horizontalScroll(horizontalScrollState)
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .width(155.dp)
-                                .height(36.dp)
-                                .border(0.5.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
-                                .padding(horizontal = 8.dp),
-                            contentAlignment = Alignment.CenterStart
-                        ) {
-                            Text(
-                                text = stringResource(R.string.daily_total),
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-
-                        Box(
-                            modifier = Modifier
-                                .width(1.5.dp)
-                                .fillMaxHeight()
-                                .background(MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
-                        )
-
-                        Row(
-                            modifier = Modifier
-                                .weight(1f)
-                                .horizontalScroll(horizontalScrollState)
-                        ) {
-                            periods.forEach { period ->
-                                val percentage = periodCompletionPercentage[period.key] ?: 0f
-                                Box(
-                                    modifier = Modifier
-                                        .size(width = 48.dp, height = 36.dp)
-                                        .border(0.5.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        text = "${percentage.toInt()}%",
-                                        fontSize = 10.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = if (percentage > 0f) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                                        textAlign = TextAlign.Center
-                                    )
-                                }
-                            }
-
+                        periods.forEach { period ->
+                            val percentage = periodCompletionPercentage[period.key] ?: 0f
                             Box(
                                 modifier = Modifier
                                     .size(width = 48.dp, height = 36.dp)
-                                    .border(0.5.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
-                            )
+                                    .border(0.5.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "${percentage.toInt()}%",
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (percentage > 0f) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                    textAlign = TextAlign.Center
+                                )
+                            }
                         }
+
+                        Box(
+                            modifier = Modifier
+                                .width(2.dp)
+                                .height(36.dp)
+                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.4f))
+                        )
+
+                        Box(
+                            modifier = Modifier
+                                .size(width = 48.dp, height = 36.dp)
+                                .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.25f))
+                                .border(0.5.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f))
+                        )
                     }
                 }
             }

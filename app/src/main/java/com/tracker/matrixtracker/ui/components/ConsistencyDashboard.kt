@@ -20,9 +20,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.tracker.matrixtracker.R
 import com.tracker.matrixtracker.domain.model.Task
 
 @Composable
@@ -58,7 +60,7 @@ fun ConsistencyDashboard(
                     modifier = Modifier.size(20.dp)
                 )
                 Text(
-                    text = "Monthly Momentum",
+                    text = stringResource(R.string.monthly_momentum),
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
@@ -87,7 +89,7 @@ fun ConsistencyDashboard(
                             color = MaterialTheme.colorScheme.primary
                         )
                         Text(
-                            text = "Monthly Score",
+                            text = stringResource(R.string.monthly_score),
                             fontSize = 11.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -97,7 +99,7 @@ fun ConsistencyDashboard(
                 bestDayOfWeek?.let { (dayName, percent) ->
                     Column(horizontalAlignment = Alignment.End) {
                         Text(
-                            text = "🏆 Best Day",
+                            text = "🏆 ${stringResource(R.string.best_day)}",
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Medium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -114,7 +116,7 @@ fun ConsistencyDashboard(
 
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text(
-                    text = "Active Streaks",
+                    text = stringResource(R.string.active_streaks),
                     fontSize = 12.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -133,7 +135,7 @@ fun ConsistencyDashboard(
                                 onClick = {},
                                 label = {
                                     Text(
-                                        text = "🔥 ${streak}d ${task.title}",
+                                        text = stringResource(R.string.streak_tag_format, streak, task.title),
                                         fontSize = 12.sp,
                                         fontWeight = FontWeight.Bold
                                     )
@@ -147,7 +149,7 @@ fun ConsistencyDashboard(
                     }
                 } else {
                     Text(
-                        text = "Mark your habits today to start a streak!",
+                        text = stringResource(R.string.start_streak_prompt),
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
                     )

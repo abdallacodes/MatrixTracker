@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -28,6 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.tracker.matrixtracker.R
@@ -62,6 +64,8 @@ fun BoardSelectionBottomSheet(
             ) {
                 items(availableBoards, key = { it.id }) { board ->
                     val isSelected = board.id == currentBoard?.id
+                    val canDelete = availableBoards.size > 1
+
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -82,26 +86,39 @@ fun BoardSelectionBottomSheet(
                                 Icon(
                                     imageVector = Icons.Default.Check,
                                     contentDescription = "Selected",
-                                    tint = MaterialTheme.colorScheme.primary
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(20.dp)
                                 )
                             } else {
-                                Spacer(modifier = Modifier.padding(12.dp))
+                                Spacer(modifier = Modifier.size(20.dp))
                             }
 
                             Text(
                                 text = board.title,
                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                                 fontSize = 16.sp,
-                                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.weight(1f, fill = false)
                             )
+
+                            val cadenceText = when (board.cadence) {
+                                com.tracker.matrixtracker.domain.model.BoardCadence.DAILY -> stringResource(R.string.daily)
+                                com.tracker.matrixtracker.domain.model.BoardCadence.WEEKLY -> stringResource(R.string.weekly)
+                                com.tracker.matrixtracker.domain.model.BoardCadence.MONTHLY -> stringResource(R.string.monthly)
+                            }
 
                             AssistChip(
                                 onClick = {},
-                                label = { Text(board.cadence.name, fontSize = 10.sp) }
+                                label = { Text(cadenceText, fontSize = 10.sp) }
                             )
                         }
 
-                        Row {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
                             IconButton(onClick = { onEditBoard(board) }) {
                                 Icon(
                                     imageVector = Icons.Default.Edit,
@@ -109,11 +126,14 @@ fun BoardSelectionBottomSheet(
                                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
-                            IconButton(onClick = { onDeleteBoard(board) }) {
+                            IconButton(
+                                onClick = { onDeleteBoard(board) },
+                                enabled = canDelete
+                            ) {
                                 Icon(
                                     imageVector = Icons.Default.Delete,
                                     contentDescription = stringResource(R.string.delete_board),
-                                    tint = MaterialTheme.colorScheme.error
+                                    tint = if (canDelete) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f)
                                 )
                             }
                         }

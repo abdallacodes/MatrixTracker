@@ -73,10 +73,15 @@ fun CreateBoardDialog(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 BoardCadence.entries.forEach { cadence ->
+                    val cadenceText = when (cadence) {
+                        BoardCadence.DAILY -> stringResource(R.string.daily)
+                        BoardCadence.WEEKLY -> stringResource(R.string.weekly)
+                        BoardCadence.MONTHLY -> stringResource(R.string.monthly)
+                    }
                     FilterChip(
                         selected = (selectedCadence == cadence),
                         onClick = { selectedCadence = cadence },
-                        label = { Text(cadence.name, fontSize = 12.sp) }
+                        label = { Text(cadenceText, fontSize = 12.sp) }
                     )
                 }
             }

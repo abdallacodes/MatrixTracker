@@ -28,6 +28,8 @@ fun MatrixStatusCell(
     onToggle: () -> Unit,
     onLongClick: () -> Unit,
     modifier: Modifier = Modifier,
+    isFuture: Boolean = false,
+    colIndex: Int = 0,
 ) {
     val haptic = LocalHapticFeedback.current
     val themeMode = LocalThemeMode.current
@@ -44,7 +46,7 @@ fun MatrixStatusCell(
             )
             "LIGHT" -> Quadruple(
                 MaterialTheme.colorScheme.surface,
-                MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f),
+                MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f),
                 MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
                 ""
             )
@@ -117,27 +119,49 @@ fun MatrixStatusCell(
         }
     }
 
+    val finalBgColor = when {
+        isFuture -> if (themeMode == "AMOLED") Color(0xFF080808) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.12f)
+        status == CellStatus.EMPTY -> when (themeMode) {
+            "AMOLED" -> if (colIndex % 2 == 0) Color(0xFF080808) else Color(0xFF000000)
+            "LIGHT" -> if (colIndex % 2 == 0) MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.12f) else MaterialTheme.colorScheme.surface
+            else -> if (colIndex % 2 == 0) MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.08f) else MaterialTheme.colorScheme.surface
+        }
+        else -> bgColor
+    }
+
+    val finalBorderColor = if (isFuture) {
+        MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.12f)
+    } else {
+        borderColor
+    }
+
+    val finalTextColor = if (isFuture) textColor.copy(alpha = 0.3f) else textColor
+
     Box(
         modifier = modifier
             .size(width = 48.dp, height = 44.dp)
-            .background(bgColor)
-            .border(0.5.dp, borderColor)
-            .combinedClickable(
-                onClick = {
-                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                    onToggle()
-                },
-                onLongClick = {
-                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onLongClick()
-                }
+            .background(finalBgColor)
+            .border(0.5.dp, finalBorderColor)
+            .then(
+                if (!isFuture) {
+                    Modifier.combinedClickable(
+                        onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            onToggle()
+                        },
+                        onLongClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            onLongClick()
+                        }
+                    )
+                } else Modifier
             ),
         contentAlignment = Alignment.Center
     ) {
         if (textSymbol.isNotEmpty()) {
             Text(
                 text = textSymbol,
-                color = textColor,
+                color = finalTextColor,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold
             )

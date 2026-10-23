@@ -29,6 +29,7 @@ object PeriodUtils {
             key = key,
             label = label,
             isCurrent = date == today,
+            isFuture = date.isAfter(today)
         )
     }
 
@@ -61,13 +62,16 @@ object PeriodUtils {
         val lastDayOfWeek = firstDayOfWeek.plusDays(6)
 
         val subLabel = "${firstDayOfWeek.format(monthDayFormatter)} - ${lastDayOfWeek.format(monthDayFormatter)}"
-        val isCurrent = key == getCurrentWeekKey(today)
+        val currentWeekKey = getCurrentWeekKey(today)
+        val isCurrent = key == currentWeekKey
+        val isFuture = key > currentWeekKey
 
         return PeriodHeader(
             key = key,
             label = label,
             subLabel = subLabel,
-            isCurrent = isCurrent
+            isCurrent = isCurrent,
+            isFuture = isFuture
         )
     }
 
@@ -88,11 +92,14 @@ object PeriodUtils {
     fun formatMonthlyHeader(yearMonth: YearMonth, today: LocalDate = LocalDate.now()): PeriodHeader {
         val key = yearMonth.toString()
         val label = yearMonth.format(monthFormatter)
-        val isCurrent = yearMonth == YearMonth.from(today)
+        val currentYearMonth = YearMonth.from(today)
+        val isCurrent = yearMonth == currentYearMonth
+        val isFuture = yearMonth.isAfter(currentYearMonth)
         return PeriodHeader(
             key = key,
             label = label,
-            isCurrent = isCurrent
+            isCurrent = isCurrent,
+            isFuture = isFuture
         )
     }
 

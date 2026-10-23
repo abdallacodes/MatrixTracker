@@ -18,6 +18,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -26,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.tracker.matrixtracker.R
 import com.tracker.matrixtracker.domain.model.Task
+import com.tracker.matrixtracker.ui.components.core.MatrixConfirmDialog
 
 @Composable
 fun TaskManagementDialog(
@@ -35,6 +40,8 @@ fun TaskManagementDialog(
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    var taskToDelete by remember { mutableStateOf<Task?>(null) }
+
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.manage_tasks)) },
@@ -54,6 +61,9 @@ fun TaskManagementDialog(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         itemsIndexed(tasks, key = { _, task -> task.id }) { index, task ->
+                            val canMoveUp = index > 0
+                            val canMoveDown = index < tasks.size - 1
+
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -71,26 +81,28 @@ fun TaskManagementDialog(
                                 Row {
                                     IconButton(
                                         onClick = { onReorderTasks(index, index - 1) },
-                                        enabled = (index > 0)
+                                        enabled = canMoveUp
                                     ) {
                                         Icon(
                                             imageVector = Icons.Default.KeyboardArrowUp,
-                                            contentDescription = "Move Up"
+                                            contentDescription = "Move Up",
+                                            tint = if (canMoveUp) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
                                         )
                                     }
 
                                     IconButton(
                                         onClick = { onReorderTasks(index, index + 1) },
-                                        enabled = (index < tasks.size - 1)
+                                        enabled = canMoveDown
                                     ) {
                                         Icon(
                                             imageVector = Icons.Default.KeyboardArrowDown,
-                                            contentDescription = "Move Down"
+                                            contentDescription = "Move Down",
+                                            tint = if (canMoveDown) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
                                         )
                                     }
 
                                     IconButton(
-                                        onClick = { onDeleteTask(task) }
+                                        onClick = { taskToDelete = task }
                                     ) {
                                         Icon(
                                             imageVector = Icons.Default.Delete,
@@ -112,4 +124,19 @@ fun TaskManagementDialog(
         },
         modifier = modifier
     )
+
+    taskToDelete?.let { task ->
+        MatrixConfirmDialog(
+            title = stringResource(R.string.delete_task),
+            message = stringResource(R.string.delete_task_warning, task.title),
+            confirmLabel = stringResource(R.string.delete),
+            onConfirm = {
+                onDeleteTask(task)
+                taskToDelete = null
+            },
+            onDismiss = { taskToDelete = null },
+            icon = Icons.Default.Delete,
+            isDestructive = true
+        )
+    }
 }

@@ -2,12 +2,13 @@ package com.tracker.matrixtracker
 
 import android.content.res.Configuration
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
+import androidx.activity.compose.LocalActivityResultRegistryOwner
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -17,7 +18,6 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
-import androidx.room.Room
 import com.tracker.matrixtracker.data.local.AppDatabase
 import com.tracker.matrixtracker.data.repository.AppSettings
 import com.tracker.matrixtracker.data.repository.SettingsRepository
@@ -32,11 +32,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        val database = Room.databaseBuilder(
-            applicationContext,
-            AppDatabase::class.java,
-            "matrix_tracker.db"
-        ).fallbackToDestructiveMigration(dropAllTables = true).build()
+        val database = AppDatabase.getInstance(applicationContext)
 
         val repository = TrackerRepositoryImpl(
             boardDao = database.boardDao(),
@@ -64,14 +60,18 @@ class MainActivity : AppCompatActivity() {
             CompositionLocalProvider(
                 LocalContext provides localizedContext,
                 LocalConfiguration provides localizedContext.resources.configuration,
-                LocalLayoutDirection provides layoutDirection
+                LocalLayoutDirection provides layoutDirection,
+                LocalActivityResultRegistryOwner provides this
             ) {
                 MatrixTrackerTheme(themeMode = settingsState.themeMode) {
                     val viewModel = remember { MatrixViewModel(repository, settingsRepository) }
-                    Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                    Surface(
+                        modifier = Modifier.fillMaxSize(),
+                        color = MaterialTheme.colorScheme.background
+                    ) {
                         MatrixScreen(
                             viewModel = viewModel,
-                            modifier = Modifier.padding(innerPadding)
+                            modifier = Modifier.fillMaxSize()
                         )
                     }
                 }

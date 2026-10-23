@@ -5,6 +5,7 @@ import android.content.pm.ActivityInfo
 import android.content.res.Configuration
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,13 +16,19 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
@@ -57,9 +64,12 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.DpOffset
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.tracker.matrixtracker.R
@@ -183,7 +193,12 @@ fun MatrixScreen(
 
 
     if (isLandscape) {
-        Box(modifier = modifier.fillMaxSize()) {
+        Box(
+            modifier = modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .safeDrawingPadding()
+        ) {
             if (uiState.isLoading) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
@@ -192,65 +207,130 @@ fun MatrixScreen(
                     CircularProgressIndicator()
                 }
             } else {
-                MatrixGrid(
-                    tasks = uiState.tasks,
-                    periods = uiState.periods,
-                    cells = uiState.cells,
-                    taskCompletionPercentage = uiState.taskCompletionPercentage,
-                    periodCompletionPercentage = uiState.periodCompletionPercentage,
-                    dragGestureEnabled = settingsState.dragGestureEnabled,
-                    scrollToTodayTrigger = scrollToTodayTrigger,
-                    onToggleCell = { taskId, periodKey ->
-                        val existingNote = uiState.cells[Pair(taskId, periodKey)]?.note
-                        if (!existingNote.isNullOrBlank()) {
-                            android.widget.Toast.makeText(context, context.resources.getString(R.string.note_prefix, existingNote), android.widget.Toast.LENGTH_SHORT).show()
-                        }
-                        viewModel.toggleCell(taskId, periodKey)
-                    },
-                    onBatchMarkCells = viewModel::batchMarkCells,
-                    onMarkAllHabitsForPeriod = viewModel::markAllHabitsForPeriod,
-                    onClearPeriod = viewModel::clearPeriod,
-                    onMarkTaskRecentDays = viewModel::markTaskRecentDays,
-                    onCellLongClick = { taskId, periodKey ->
-                        val existingNote = uiState.cells[Pair(taskId, periodKey)]?.note ?: ""
-                        selectedCellForNote = Pair(taskId, periodKey)
-                        noteText = existingNote
-                    },
-                    onTaskLongClick = { task ->
-                        selectedTaskForAction = task
-                    },
-                    onRenameTask = { task ->
-                        selectedTaskForEdit = task
-                    },
+                Column(
                     modifier = Modifier.fillMaxSize()
-                )
-            }
-
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(12.dp)
-            ) {
-                FloatingActionButton(
-                    onClick = { toggleOrientation() },
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.65f),
-                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant
                 ) {
-                    Icon(
-                        imageVector = ScreenRotationIcon,
-                        contentDescription = "Exit Landscape"
-                    )
-                }
+                    // Compact Fullscreen Sub-Header (Navigation + Board Title + Exit Button)
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(44.dp)
+                            .background(MaterialTheme.colorScheme.background)
+                            .padding(horizontal = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            IconButton(
+                                onClick = viewModel::previousPeriod,
+                                modifier = Modifier.size(32.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                    contentDescription = stringResource(R.string.previous_period),
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
 
-                FloatingActionButton(
-                    onClick = { showSettingsDialog = true },
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.65f),
-                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Settings,
-                        contentDescription = stringResource(R.string.settings)
+                            Text(
+                                text = periodTitle,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 14.sp,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier.padding(horizontal = 4.dp)
+                            )
+
+                            IconButton(
+                                onClick = viewModel::nextPeriod,
+                                modifier = Modifier.size(32.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                                    contentDescription = stringResource(R.string.next_period),
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.width(6.dp))
+
+                            IconButton(
+                                onClick = {
+                                    viewModel.goToCurrentPeriod()
+                                    scrollToTodayTrigger++
+                                },
+                                modifier = Modifier.size(32.dp)
+                            ) {
+                                Text(
+                                    text = "🎯",
+                                    fontSize = 16.sp
+                                )
+                            }
+                        }
+
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text(
+                                text = uiState.currentBoard?.title ?: "",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 14.sp,
+                                color = MaterialTheme.colorScheme.primary,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+
+                            IconButton(
+                                onClick = { toggleOrientation() },
+                                modifier = Modifier.size(36.dp)
+                            ) {
+                                Icon(
+                                    imageVector = ScreenRotationIcon,
+                                    contentDescription = stringResource(R.string.exit_landscape),
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(22.dp)
+                                )
+                            }
+                        }
+                    }
+
+                    // Full-Screen Matrix Grid Table
+                    MatrixGrid(
+                        tasks = uiState.tasks,
+                        periods = uiState.periods,
+                        cells = uiState.cells,
+                        taskCompletionPercentage = uiState.taskCompletionPercentage,
+                        periodCompletionPercentage = uiState.periodCompletionPercentage,
+                        dragGestureEnabled = settingsState.dragGestureEnabled,
+                        scrollToTodayTrigger = scrollToTodayTrigger,
+                        onToggleCell = { taskId, periodKey ->
+                            val existingNote = uiState.cells[Pair(taskId, periodKey)]?.note
+                            if (!existingNote.isNullOrBlank()) {
+                                android.widget.Toast.makeText(context, context.resources.getString(R.string.note_prefix, existingNote), android.widget.Toast.LENGTH_SHORT).show()
+                            }
+                            viewModel.toggleCell(taskId, periodKey)
+                        },
+                        onBatchMarkCells = viewModel::batchMarkCells,
+                        onMarkAllHabitsForPeriod = viewModel::markAllHabitsForPeriod,
+                        onClearPeriod = viewModel::clearPeriod,
+                        onMarkTaskRecentDays = viewModel::markTaskRecentDays,
+                        onCellLongClick = { taskId, periodKey ->
+                            val existingNote = uiState.cells[Pair(taskId, periodKey)]?.note ?: ""
+                            selectedCellForNote = Pair(taskId, periodKey)
+                            noteText = existingNote
+                        },
+                        onTaskLongClick = { task ->
+                            selectedTaskForAction = task
+                        },
+                        onRenameTask = { task ->
+                            selectedTaskForEdit = task
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f)
                     )
                 }
             }
@@ -258,151 +338,211 @@ fun MatrixScreen(
     } else {
         Scaffold(
             topBar = {
-                TopAppBar(
-                    title = {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(2.dp)
-                        ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(MaterialTheme.colorScheme.background)
+                        .statusBarsPadding()
+                ) {
+                    // Tier 1: Primary TopAppBar (Context & Global Actions)
+                    TopAppBar(
+                        title = {
                             TextButton(
                                 onClick = { showBoardSelectionBottomSheet = true },
-                                contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp)
+                                contentPadding = PaddingValues(horizontal = 0.dp, vertical = 0.dp)
                             ) {
-                                Text(
-                                    text = "${uiState.currentBoard?.title ?: stringResource(R.string.select_board)} · $periodTitle",
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 15.sp,
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    Text(
+                                        text = uiState.currentBoard?.title ?: stringResource(R.string.select_board),
+                                        fontWeight = FontWeight.SemiBold,
+                                        fontSize = 20.sp,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                    Icon(
+                                        imageVector = Icons.Default.KeyboardArrowDown,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
                             }
+                        },
+                        actions = {
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.padding(end = 4.dp)
+                            ) {
+                                IconButton(
+                                    onClick = { toggleOrientation() }
+                                ) {
+                                    Icon(
+                                        imageVector = ScreenRotationIcon,
+                                        contentDescription = stringResource(R.string.fullscreen_view),
+                                        modifier = Modifier.size(24.dp)
+                                    )
+                                }
 
+                                IconButton(
+                                    onClick = { showAddTaskDialog = true }
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Add,
+                                        contentDescription = stringResource(R.string.add_task),
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(24.dp)
+                                    )
+                                }
+
+                                IconButton(
+                                    onClick = { showSettingsDialog = true }
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Settings,
+                                        contentDescription = stringResource(R.string.settings),
+                                        modifier = Modifier.size(24.dp)
+                                    )
+                                }
+
+                                Box {
+                                    IconButton(
+                                        onClick = { isOverflowMenuExpanded = true }
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.MoreVert,
+                                            contentDescription = stringResource(R.string.more_options),
+                                            modifier = Modifier.size(24.dp)
+                                        )
+                                    }
+
+                                    val isRtl = LocalLayoutDirection.current == LayoutDirection.Rtl
+                                    DropdownMenu(
+                                        expanded = isOverflowMenuExpanded,
+                                        onDismissRequest = { isOverflowMenuExpanded = false },
+                                        offset = DpOffset(x = if (isRtl) 132.dp else 0.dp, y = 0.dp),
+                                        containerColor = MaterialTheme.colorScheme.surface,
+                                        shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp)
+                                    ) {
+                                        DropdownMenuItem(
+                                            text = { Text(stringResource(R.string.manage_tasks)) },
+                                            onClick = {
+                                                isOverflowMenuExpanded = false
+                                                showTaskManagementDialog = true
+                                            }
+                                        )
+
+                                        DropdownMenuItem(
+                                            text = { Text(stringResource(R.string.export_csv)) },
+                                            onClick = {
+                                                isOverflowMenuExpanded = false
+                                                viewModel.exportCurrentBoardAsCsv(context)
+                                            }
+                                        )
+
+                                        DropdownMenuItem(
+                                            text = { Text(stringResource(R.string.print_pdf)) },
+                                            onClick = {
+                                                isOverflowMenuExpanded = false
+                                                viewModel.printCurrentBoard(context)
+                                            }
+                                        )
+
+                                        DropdownMenuItem(
+                                            text = { Text(stringResource(R.string.share_pdf)) },
+                                            onClick = {
+                                                isOverflowMenuExpanded = false
+                                                viewModel.shareBoardAsPdf(context)
+                                            }
+                                        )
+                                    }
+                                }
+                            }
+                        },
+                        colors = TopAppBarDefaults.topAppBarColors(
+                            containerColor = MaterialTheme.colorScheme.background
+                        )
+                    )
+
+                    // Tier 2: Time Navigation Sub-Header (Contextual)
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp)
+                            .background(MaterialTheme.colorScheme.background)
+                            .padding(horizontal = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
                             IconButton(
                                 onClick = viewModel::previousPeriod,
-                                modifier = Modifier.size(28.dp)
+                                modifier = Modifier.size(36.dp)
                             ) {
                                 Icon(
                                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                    contentDescription = "Previous Period",
-                                    modifier = Modifier.size(16.dp)
+                                    contentDescription = stringResource(R.string.previous_period),
+                                    modifier = Modifier.size(20.dp)
                                 )
                             }
+
+                            Text(
+                                text = periodTitle,
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 16.sp,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier.padding(horizontal = 6.dp)
+                            )
 
                             IconButton(
                                 onClick = viewModel::nextPeriod,
-                                modifier = Modifier.size(28.dp)
+                                modifier = Modifier.size(36.dp)
                             ) {
                                 Icon(
                                     imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                                    contentDescription = "Next Period",
-                                    modifier = Modifier.size(16.dp)
+                                    contentDescription = stringResource(R.string.next_period),
+                                    modifier = Modifier.size(20.dp)
                                 )
                             }
-                        }
-                    },
-                    actions = {
-                        IconButton(
-                            onClick = {
-                                viewModel.goToCurrentPeriod()
-                                scrollToTodayTrigger++
-                            },
-                            modifier = Modifier.size(34.dp)
-                        ) {
-                            Text(
-                                text = "🎯",
-                                fontSize = 15.sp
-                            )
-                        }
 
-                        IconButton(
-                            onClick = { showAddTaskDialog = true },
-                            modifier = Modifier.size(34.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Add,
-                                contentDescription = stringResource(R.string.add_task),
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
+                            Spacer(modifier = Modifier.width(8.dp))
 
-                        IconButton(
-                            onClick = { toggleOrientation() },
-                            modifier = Modifier.size(34.dp)
-                        ) {
-                            Icon(
-                                imageVector = ScreenRotationIcon,
-                                contentDescription = "Switch Orientation",
-                                modifier = Modifier.size(18.dp)
-                            )
-                        }
-
-                        IconButton(
-                            onClick = { showSettingsDialog = true },
-                            modifier = Modifier.size(34.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Settings,
-                                contentDescription = stringResource(R.string.settings),
-                                modifier = Modifier.size(18.dp)
-                            )
-                        }
-
-                        Box {
                             IconButton(
-                                onClick = { isOverflowMenuExpanded = true },
-                                modifier = Modifier.size(34.dp)
+                                onClick = {
+                                    viewModel.goToCurrentPeriod()
+                                    scrollToTodayTrigger++
+                                },
+                                modifier = Modifier.size(36.dp)
+                            ) {
+                                Text(
+                                    text = "🎯",
+                                    fontSize = 18.sp
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.width(4.dp))
+
+                            IconButton(
+                                onClick = { toggleOrientation() },
+                                modifier = Modifier.size(36.dp)
                             ) {
                                 Icon(
-                                    imageVector = Icons.Default.MoreVert,
-                                    contentDescription = "More Options",
-                                    modifier = Modifier.size(18.dp)
-                                )
-                            }
-
-                            DropdownMenu(
-                                expanded = isOverflowMenuExpanded,
-                                onDismissRequest = { isOverflowMenuExpanded = false }
-                            ) {
-                                DropdownMenuItem(
-                                    text = { Text(stringResource(R.string.manage_tasks)) },
-                                    onClick = {
-                                        isOverflowMenuExpanded = false
-                                        showTaskManagementDialog = true
-                                    }
-                                )
-
-                                DropdownMenuItem(
-                                    text = { Text(stringResource(R.string.export_csv)) },
-                                    onClick = {
-                                        isOverflowMenuExpanded = false
-                                        viewModel.exportCurrentBoardAsCsv(context)
-                                    }
-                                )
-
-                                DropdownMenuItem(
-                                    text = { Text(stringResource(R.string.print_pdf)) },
-                                    onClick = {
-                                        isOverflowMenuExpanded = false
-                                        viewModel.printCurrentBoard(context)
-                                    }
-                                )
-
-                                DropdownMenuItem(
-                                    text = { Text(stringResource(R.string.share_pdf)) },
-                                    onClick = {
-                                        isOverflowMenuExpanded = false
-                                        viewModel.shareBoardAsPdf(context)
-                                    }
+                                    imageVector = ScreenRotationIcon,
+                                    contentDescription = stringResource(R.string.fullscreen_view),
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.size(20.dp)
                                 )
                             }
                         }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.background
-                    )
-                )
+                    }
+                }
             },
             modifier = modifier
         ) { innerPadding ->
@@ -410,17 +550,20 @@ fun MatrixScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)
+                    .verticalScroll(rememberScrollState())
             ) {
                 if (uiState.isLoading) {
                     Box(
-                        modifier = Modifier.fillMaxSize(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(300.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         CircularProgressIndicator()
                     }
                 } else {
                     Column(
-                        modifier = Modifier.fillMaxSize()
+                        modifier = Modifier.fillMaxWidth()
                     ) {
                         MatrixGrid(
                             tasks = uiState.tasks,
@@ -452,8 +595,10 @@ fun MatrixScreen(
                             onRenameTask = { task ->
                                 selectedTaskForEdit = task
                             },
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.fillMaxWidth()
                         )
+
+                        Spacer(modifier = Modifier.height(16.dp))
 
                         ConsistencyDashboard(
                             overallConsistencyPercent = uiState.overallConsistencyPercent,
@@ -461,6 +606,8 @@ fun MatrixScreen(
                             tasks = uiState.tasks,
                             taskStreaks = uiState.taskStreaks
                         )
+
+                        Spacer(modifier = Modifier.height(24.dp))
                     }
                 }
             }
@@ -591,6 +738,7 @@ fun MatrixScreen(
     if (showAddTaskDialog) {
         val addTaskFocusRequester = remember { FocusRequester() }
         LaunchedEffect(Unit) {
+            kotlinx.coroutines.delay(100)
             addTaskFocusRequester.requestFocus()
         }
 
@@ -607,7 +755,19 @@ fun MatrixScreen(
                     onValueChange = { newTaskTitle = it },
                     placeholder = stringResource(R.string.task_name),
                     singleLine = true,
-                    focusRequester = addTaskFocusRequester
+                    focusRequester = addTaskFocusRequester,
+                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                        imeAction = androidx.compose.ui.text.input.ImeAction.Done
+                    ),
+                    keyboardActions = androidx.compose.foundation.text.KeyboardActions(
+                        onDone = {
+                            if (newTaskTitle.isNotBlank()) {
+                                viewModel.addNewTask(newTaskTitle.trim())
+                                newTaskTitle = ""
+                                showAddTaskDialog = false
+                            }
+                        }
+                    )
                 )
 
                 Button(
@@ -622,7 +782,7 @@ fun MatrixScreen(
                     modifier = Modifier.fillMaxWidth().height(48.dp)
                 ) {
                     Text(
-                        text = stringResource(R.string.add_task),
+                        text = stringResource(R.string.add_action),
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold
                     )

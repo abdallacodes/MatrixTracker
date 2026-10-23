@@ -22,11 +22,7 @@ class AutoBackupWorker(
 
     override suspend fun doWork(): Result {
         return try {
-            val db = Room.databaseBuilder(
-                context.applicationContext,
-                AppDatabase::class.java,
-                "matrix_tracker.db"
-            ).fallbackToDestructiveMigration(dropAllTables = true).build()
+            val db = AppDatabase.getInstance(context)
 
             val repository = TrackerRepositoryImpl(
                 boardDao = db.boardDao(),

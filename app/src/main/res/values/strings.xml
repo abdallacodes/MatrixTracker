@@ -43,6 +43,7 @@
     <string name="task_name">Task Name</string>
     <string name="rename">Rename</string>
     <string name="manage_tasks">Manage Tasks</string>
+    <string name="add_action">Add</string>
     <string name="monthly_momentum">Monthly Momentum</string>
     <string name="monthly_score">Monthly Score</string>
     <string name="best_day">Best Day</string>
@@ -50,6 +51,13 @@
     <string name="start_streak_prompt">Mark your habits today to start a streak!</string>
     <string name="last_backup">Last Backup: %1$s</string>
     <string name="no_backup_yet">No backup created yet</string>
+    <string name="streak_tag_format">🔥 %1$sd %2$s</string>
+
+    <string name="how_to_use_subtitle">Learn core gestures, notes, and quick actions</string>
+    <string name="backup_now_subtitle">Create a fresh backup file now</string>
+    <string name="export_backup_subtitle">Save backup JSON file to storage</string>
+    <string name="restore_backup_subtitle">Import habits data from JSON backup</string>
+    <string name="drag_gesture_subtitle">Multi-cell horizontal drag marking</string>
 
     <string name="habit_or_task">Habit / Task</string>
     <string name="daily_total">Daily Total</string>
@@ -76,6 +84,12 @@
     <string name="mark_past_7_days">Mark Past 7 Days Done</string>
     <string name="manage_task_options">Manage Task Options</string>
     <string name="today">Today</string>
+    <string name="previous_period">Previous Period</string>
+    <string name="next_period">Next Period</string>
+    <string name="exit_landscape">Exit Landscape</string>
+    <string name="switch_orientation">Switch Orientation</string>
+    <string name="fullscreen_view">Fullscreen View</string>
+    <string name="more_options">More Options</string>
 
     <string name="how_to_use">How to Use MatrixTracker</string>
     <string name="guide_single_tap_title">Single Tap</string>

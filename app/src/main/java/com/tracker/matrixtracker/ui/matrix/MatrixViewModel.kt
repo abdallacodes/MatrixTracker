@@ -207,19 +207,27 @@ class MatrixViewModel(
         }
     }
 
+    private var isCreatingDefaultBoard = false
+
     fun createDefaultBoardIfNone() {
+        if (isCreatingDefaultBoard) return
+        isCreatingDefaultBoard = true
         viewModelScope.launch {
-            val boards = repository.getBoards().first()
-            if (boards.isEmpty()) {
-                val newBoardId = repository.saveBoard(
-                    Board(title = "Daily Habits", cadence = BoardCadence.DAILY)
-                )
-                repository.saveTask(Task(boardId = newBoardId, title = "Exercise 30 mins", sortOrder = 0))
-                repository.saveTask(Task(boardId = newBoardId, title = "Drink 2L Water", sortOrder = 1))
-                repository.saveTask(Task(boardId = newBoardId, title = "Read 15 Pages", sortOrder = 2))
-                repository.saveTask(Task(boardId = newBoardId, title = "Meditate 10 mins", sortOrder = 3))
-                _selectedBoardId.value = newBoardId
-                notifyWidgetUpdate()
+            try {
+                val boards = repository.getBoards().first()
+                if (boards.isEmpty()) {
+                    val newBoardId = repository.saveBoard(
+                        Board(title = "Daily Habits", cadence = BoardCadence.DAILY)
+                    )
+                    repository.saveTask(Task(boardId = newBoardId, title = "Exercise 30 mins", sortOrder = 0))
+                    repository.saveTask(Task(boardId = newBoardId, title = "Drink 2L Water", sortOrder = 1))
+                    repository.saveTask(Task(boardId = newBoardId, title = "Read 15 Pages", sortOrder = 2))
+                    repository.saveTask(Task(boardId = newBoardId, title = "Meditate 10 mins", sortOrder = 3))
+                    _selectedBoardId.value = newBoardId
+                    notifyWidgetUpdate()
+                }
+            } finally {
+                isCreatingDefaultBoard = false
             }
         }
     }

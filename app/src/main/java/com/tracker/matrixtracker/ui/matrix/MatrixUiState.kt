@@ -10,6 +10,7 @@ data class PeriodHeader(
     val label: String,
     val subLabel: String? = null,
     val isCurrent: Boolean = false,
+    val isFuture: Boolean = false,
 )
 
 data class MatrixUiState(

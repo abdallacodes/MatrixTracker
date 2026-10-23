@@ -40,16 +40,24 @@
     <string name="edit_note">تعديل الملاحظة</string>
     <string name="delete_note">حذف الملاحظة</string>
     <string name="cell_note">ملاحظة الخلية</string>
-    <string name="task_name">اسم المهمة</string>
+    <string name="task_name">اسم العادة</string>
     <string name="rename">إعادة تسمية</string>
     <string name="manage_tasks">إدارة المهام</string>
+    <string name="add_action">إضافة</string>
     <string name="monthly_momentum">الزخم الشهري</string>
     <string name="monthly_score">النتيجة الشهرية</string>
     <string name="best_day">الأفضل</string>
     <string name="active_streaks">السلاسل النشطة</string>
-    <string name="start_streak_prompt">علم على عادتك اليوم لبدء سلسلة جديدة!</string>
+    <string name="start_streak_prompt">أكمل عاداتك اليوم لتبدأ سلسلة جديدة!</string>
     <string name="last_backup">آخر نسخة احتياطية: %1$s</string>
     <string name="no_backup_yet">لم يتم إنشاء نسخة احتياطية بعد</string>
+    <string name="streak_tag_format">🔥 %1$sي %2$s</string>
+
+    <string name="how_to_use_subtitle">تعرّف على الإيماءات الأساسية والملاحظات والإجراءات السريعة</string>
+    <string name="backup_now_subtitle">إنشاء ملف نسخة احتياطية جديدة الآن</string>
+    <string name="export_backup_subtitle">حفظ ملف النسخة الاحتياطية JSON في التخزين</string>
+    <string name="restore_backup_subtitle">استيراد بيانات العادات من نسخة احتياطية JSON</string>
+    <string name="drag_gesture_subtitle">التعليم بالسحب الأفقي على خلايا متعددة</string>
 
     <string name="habit_or_task">العادة / المهمة</string>
     <string name="daily_total">الإجمالي اليومي</string>
@@ -69,13 +77,19 @@
     <string name="create_new_board">إنشاء لوحة جديدة</string>
     <string name="cadence_frequency">التكرار الدوري:</string>
     <string name="create">إنشاء</string>
-    <string name="select_board">اختر اللوحة</string>
+    <string name="select_board">اختيار اللوحة</string>
     <string name="new_board">لوحة جديدة</string>
     <string name="mark_all_done">تعليم الكل كتم</string>
     <string name="clear_all">مسح الكل</string>
     <string name="mark_past_7_days">تعليم آخر ٧ أيام كتم</string>
     <string name="manage_task_options">خيارات المهمة</string>
     <string name="today">اليوم</string>
+    <string name="previous_period">الفترة السابقة</string>
+    <string name="next_period">الفترة التالية</string>
+    <string name="exit_landscape">الخروج من الوضع الأفقي</string>
+    <string name="switch_orientation">تبديل الاتجاه</string>
+    <string name="fullscreen_view">ملء الشاشة</string>
+    <string name="more_options">خيارات إضافية</string>
 
     <string name="how_to_use">كيف أستخدم التطبيق؟</string>
     <string name="guide_single_tap_title">الضغط المفرد</string>

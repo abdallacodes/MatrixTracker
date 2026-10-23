@@ -41,16 +41,22 @@ fun MatrixHeaderCell(
 ) {
     var isMenuExpanded by remember { mutableStateOf(false) }
 
-    val bgColor = if (header.isCurrent) {
-        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.85f)
-    } else {
-        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
+    val bgColor = when {
+        header.isCurrent -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.85f)
+        header.isFuture -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.15f)
+        else -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
     }
 
     val borderColor = if (header.isCurrent) {
         MaterialTheme.colorScheme.primary
     } else {
-        MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+        MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f)
+    }
+
+    val textColor = when {
+        header.isCurrent -> MaterialTheme.colorScheme.onPrimaryContainer
+        header.isFuture -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.45f)
+        else -> MaterialTheme.colorScheme.onSurface
     }
 
     Box(contentAlignment = Alignment.Center) {
@@ -63,7 +69,7 @@ fun MatrixHeaderCell(
                     color = borderColor
                 )
                 .then(
-                    if (onMarkAllDone != null || onClearAll != null) {
+                    if (!header.isFuture && (onMarkAllDone != null || onClearAll != null)) {
                         Modifier.combinedClickable(
                             onClick = {},
                             onLongClick = { isMenuExpanded = true }
@@ -87,7 +93,7 @@ fun MatrixHeaderCell(
                 text = header.label,
                 fontSize = 11.sp,
                 fontWeight = if (header.isCurrent) FontWeight.Bold else FontWeight.Medium,
-                color = if (header.isCurrent) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface,
+                color = textColor,
                 textAlign = TextAlign.Center,
                 maxLines = 1
             )
@@ -95,7 +101,7 @@ fun MatrixHeaderCell(
                 Text(
                     text = header.subLabel,
                     fontSize = 8.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = textColor.copy(alpha = 0.7f),
                     textAlign = TextAlign.Center,
                     maxLines = 1
                 )
@@ -104,7 +110,9 @@ fun MatrixHeaderCell(
 
         DropdownMenu(
             expanded = isMenuExpanded,
-            onDismissRequest = { isMenuExpanded = false }
+            onDismissRequest = { isMenuExpanded = false },
+            containerColor = MaterialTheme.colorScheme.surface,
+            shape = RoundedCornerShape(16.dp)
         ) {
             if (onMarkAllDone != null) {
                 DropdownMenuItem(

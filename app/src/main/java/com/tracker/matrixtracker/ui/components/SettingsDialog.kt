@@ -130,7 +130,7 @@ fun SettingsDialog(
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 SettingsRow(
                     title = stringResource(R.string.how_to_use),
-                    subtitle = "Learn core gestures, notes, and quick actions",
+                    subtitle = stringResource(R.string.how_to_use_subtitle),
                     icon = Icons.Default.Settings,
                     onClick = onOpenHelp
                 )
@@ -174,21 +174,21 @@ fun SettingsDialog(
 
                 SettingsRow(
                     title = stringResource(R.string.backup_now),
-                    subtitle = "Create a fresh backup file now",
+                    subtitle = stringResource(R.string.backup_now_subtitle),
                     icon = Icons.Default.Refresh,
                     onClick = onBackupNow
                 )
 
                 SettingsRow(
                     title = stringResource(R.string.export_backup_file),
-                    subtitle = "Save backup JSON file to storage",
+                    subtitle = stringResource(R.string.export_backup_subtitle),
                     icon = Icons.Default.Share,
                     onClick = { exportLauncher.launch("MatrixTracker_Backup_$todayStr.json") }
                 )
 
                 SettingsRow(
                     title = stringResource(R.string.restore_backup_file),
-                    subtitle = "Import habits data from JSON backup",
+                    subtitle = stringResource(R.string.restore_backup_subtitle),
                     icon = Icons.Default.Share,
                     onClick = { restoreLauncher.launch(arrayOf("application/json", "*/*")) }
                 )
@@ -257,7 +257,7 @@ fun SettingsDialog(
 
                 SettingsRow(
                     title = stringResource(R.string.enable_drag_gesture),
-                    subtitle = "Multi-cell horizontal drag marking",
+                    subtitle = stringResource(R.string.drag_gesture_subtitle),
                     icon = Icons.Default.Settings,
                     trailingContent = {
                         Switch(
