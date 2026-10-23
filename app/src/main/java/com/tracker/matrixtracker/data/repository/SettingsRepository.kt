@@ -23,7 +23,7 @@ data class AppSettings(
 
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "app_settings")
 
-class SettingsRepository(private val context: Context) {
+class SettingsRepository(val context: Context) {
 
     private object Keys {
         val AUTO_BACKUP_ENABLED = booleanPreferencesKey("auto_backup_enabled")

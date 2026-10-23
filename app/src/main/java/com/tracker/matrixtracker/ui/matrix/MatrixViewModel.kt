@@ -161,6 +161,10 @@ class MatrixViewModel(
             initialValue = MatrixUiState(isLoading = true)
         )
 
+    private fun notifyWidgetUpdate() {
+        com.tracker.matrixtracker.util.WidgetUpdateHelper.notifyWidgetDataChanged(settingsRepository.context)
+    }
+
     fun selectBoard(boardId: Long) {
         _selectedBoardId.value = boardId
     }
@@ -172,6 +176,7 @@ class MatrixViewModel(
                 Board(title = title.trim(), cadence = cadence)
             )
             _selectedBoardId.value = newBoardId
+            notifyWidgetUpdate()
         }
     }
 
@@ -179,6 +184,7 @@ class MatrixViewModel(
         if (newTitle.isBlank()) return
         viewModelScope.launch {
             repository.saveBoard(board.copy(title = newTitle.trim()))
+            notifyWidgetUpdate()
         }
     }
 
@@ -194,6 +200,7 @@ class MatrixViewModel(
                 _selectedBoardId.value = null
                 createDefaultBoardIfNone()
             }
+            notifyWidgetUpdate()
         }
     }
 
@@ -209,6 +216,7 @@ class MatrixViewModel(
                 repository.saveTask(Task(boardId = newBoardId, title = "Read 15 Pages", sortOrder = 2))
                 repository.saveTask(Task(boardId = newBoardId, title = "Meditate 10 mins", sortOrder = 3))
                 _selectedBoardId.value = newBoardId
+                notifyWidgetUpdate()
             }
         }
     }
@@ -218,6 +226,7 @@ class MatrixViewModel(
             val currentEntry = uiState.value.cells[Pair(taskId, periodKey)]
             val currentStatus = currentEntry?.status ?: CellStatus.EMPTY
             repository.toggleCellStatus(taskId, periodKey, currentStatus)
+            notifyWidgetUpdate()
         }
     }
 
@@ -226,12 +235,14 @@ class MatrixViewModel(
             val currentEntry = uiState.value.cells[Pair(taskId, periodKey)]
             val currentStatus = currentEntry?.status ?: CellStatus.DONE
             repository.setCellStatus(taskId, periodKey, currentStatus, note.ifBlank { null })
+            notifyWidgetUpdate()
         }
     }
 
     fun deleteCellNote(taskId: Long, periodKey: String) {
         viewModelScope.launch {
             repository.clearCellNote(taskId, periodKey)
+            notifyWidgetUpdate()
         }
     }
 
@@ -239,18 +250,21 @@ class MatrixViewModel(
         if (periodKeys.isEmpty()) return
         viewModelScope.launch {
             repository.batchSetCellStatus(taskId, periodKeys, status)
+            notifyWidgetUpdate()
         }
     }
 
     fun markAllHabitsForPeriod(periodKey: String, status: CellStatus) {
         viewModelScope.launch {
             repository.markAllHabitsForPeriod(periodKey, status, uiState.value.tasks)
+            notifyWidgetUpdate()
         }
     }
 
     fun clearPeriod(periodKey: String) {
         viewModelScope.launch {
             repository.clearPeriod(periodKey)
+            notifyWidgetUpdate()
         }
     }
 
@@ -263,6 +277,7 @@ class MatrixViewModel(
             val startIndex = (endIndex - (daysCount - 1)).coerceAtLeast(0)
             val selectedKeys = periods.subList(startIndex, endIndex + 1).map { it.key }
             repository.batchSetCellStatus(taskId, selectedKeys, status)
+            notifyWidgetUpdate()
         }
     }
 
@@ -296,12 +311,14 @@ class MatrixViewModel(
             repository.saveTask(
                 Task(boardId = board.id, title = title.trim(), sortOrder = nextSortOrder)
             )
+            notifyWidgetUpdate()
         }
     }
 
     fun deleteTask(task: Task) {
         viewModelScope.launch {
             repository.deleteTask(task)
+            notifyWidgetUpdate()
         }
     }
 
@@ -309,6 +326,7 @@ class MatrixViewModel(
         if (newTitle.isBlank()) return
         viewModelScope.launch {
             repository.saveTask(task.copy(title = newTitle.trim()))
+            notifyWidgetUpdate()
         }
     }
 
@@ -320,6 +338,7 @@ class MatrixViewModel(
 
         viewModelScope.launch {
             repository.updateTaskOrder(currentTasks)
+            notifyWidgetUpdate()
         }
     }
 
@@ -431,6 +450,7 @@ class MatrixViewModel(
             if (bundle.boards.isNotEmpty()) {
                 _selectedBoardId.value = bundle.boards.first().id
             }
+            notifyWidgetUpdate()
             true
         } catch (_: Exception) {
             false
@@ -475,6 +495,7 @@ class MatrixViewModel(
                 if (bundle.boards.isNotEmpty()) {
                     _selectedBoardId.value = bundle.boards.first().id
                 }
+                notifyWidgetUpdate()
             }
         }
     }

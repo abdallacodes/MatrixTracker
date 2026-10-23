@@ -9,7 +9,6 @@ import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,9 +17,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.MaterialTheme
@@ -44,8 +44,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.tracker.matrixtracker.R
 import androidx.compose.ui.unit.sp
+import com.tracker.matrixtracker.R
 import com.tracker.matrixtracker.domain.model.CellEntry
 import com.tracker.matrixtracker.domain.model.CellStatus
 import com.tracker.matrixtracker.domain.model.Task
@@ -74,7 +74,6 @@ fun MatrixGrid(
     modifier: Modifier = Modifier,
 ) {
     val horizontalScrollState = rememberScrollState()
-    val verticalScrollState = rememberScrollState()
     val haptic = LocalHapticFeedback.current
     val density = LocalDensity.current
     val scope = rememberCoroutineScope()
@@ -168,16 +167,19 @@ fun MatrixGrid(
                 }
             }
 
-            // Vertically Scrollable Body (Tasks + Cell Matrix)
-            Row(
+            // Virtualized Body (LazyColumn)
+            LazyColumn(
                 modifier = Modifier
                     .weight(1f)
+                    .fillMaxWidth()
                     .background(MaterialTheme.colorScheme.surface)
             ) {
-                Column(
-                    modifier = Modifier.verticalScroll(verticalScrollState)
-                ) {
-                    tasks.forEach { task ->
+                items(tasks, key = { it.id }) { task ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(44.dp)
+                    ) {
                         val progress = taskCompletionPercentage[task.id] ?: 0f
                         MatrixTaskRowHeader(
                             task = task,
@@ -186,120 +188,130 @@ fun MatrixGrid(
                             onRenameTask = { onRenameTask?.invoke(task) },
                             onMarkPast7DaysDone = { onMarkTaskRecentDays(task.id, 7, CellStatus.DONE) }
                         )
-                    }
 
-                    Box(
-                        modifier = Modifier
-                            .width(155.dp)
-                            .height(36.dp)
-                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
-                            .border(0.5.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
-                            .padding(horizontal = 8.dp),
-                        contentAlignment = Alignment.CenterStart
-                    ) {
-                        Text(
-                            text = stringResource(R.string.daily_total),
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        Box(
+                            modifier = Modifier
+                                .width(1.5.dp)
+                                .fillMaxHeight()
+                                .background(MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
                         )
+
+                        Row(
+                            modifier = Modifier
+                                .weight(1f)
+                                .horizontalScroll(horizontalScrollState)
+                                .then(
+                                    if (dragGestureEnabled) {
+                                        Modifier.pointerInput(task.id, periods) {
+                                            detectHorizontalDragGestures(
+                                                onDragStart = { offset ->
+                                                    draggedTaskId = task.id
+                                                    val col = (offset.x / cellWidthPx).toInt().coerceIn(0, periods.lastIndex)
+                                                    dragStartIndex = col
+                                                    dragEndIndex = col
+                                                },
+                                                onHorizontalDrag = { change, _ ->
+                                                    if (draggedTaskId == task.id) {
+                                                        val currentX = change.position.x
+                                                        val col = (currentX / cellWidthPx).toInt().coerceIn(0, periods.lastIndex)
+                                                        if (col != dragEndIndex) {
+                                                            dragEndIndex = col
+                                                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                                        }
+                                                    }
+                                                },
+                                                onDragEnd = {
+                                                    if (draggedTaskId == task.id) {
+                                                        val start = minOf(dragStartIndex, dragEndIndex)
+                                                        val end = maxOf(dragStartIndex, dragEndIndex)
+                                                        val keys = (start..end).map { periods[it].key }
+                                                        onBatchMarkCells(task.id, keys, CellStatus.DONE)
+                                                    }
+                                                    draggedTaskId = null
+                                                },
+                                                onDragCancel = {
+                                                    draggedTaskId = null
+                                                }
+                                            )
+                                        }
+                                    } else Modifier
+                                )
+                        ) {
+                            periods.forEachIndexed { colIndex, period ->
+                                val isHighlighted = (draggedTaskId == task.id) &&
+                                        (colIndex in minOf(dragStartIndex, dragEndIndex)..maxOf(dragStartIndex, dragEndIndex))
+                                val entry = cells[Pair(task.id, period.key)]
+
+                                Box {
+                                    MatrixStatusCell(
+                                        entry = entry,
+                                        onToggle = { onToggleCell(task.id, period.key) },
+                                        onLongClick = { onCellLongClick(task.id, period.key) }
+                                    )
+
+                                    if (isHighlighted) {
+                                        Box(
+                                            modifier = Modifier
+                                                .matchParentSize()
+                                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.35f))
+                                                .border(1.5.dp, MaterialTheme.colorScheme.primary)
+                                        )
+                                    }
+                                }
+                            }
+
+                            Box(
+                                modifier = Modifier
+                                    .size(width = 48.dp, height = 44.dp)
+                                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f))
+                                    .border(0.5.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "${progress.toInt()}%",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
                     }
                 }
 
-                Box(
-                    modifier = Modifier
-                        .width(1.5.dp)
-                        .fillMaxHeight()
-                        .background(MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
-                )
-
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .horizontalScroll(horizontalScrollState)
-                        .verticalScroll(verticalScrollState)
-                ) {
-                    Column {
-                        tasks.forEach { task ->
-                            Row(
-                                modifier = if (dragGestureEnabled) {
-                                    Modifier.pointerInput(task.id, periods) {
-                                        detectHorizontalDragGestures(
-                                            onDragStart = { offset ->
-                                                draggedTaskId = task.id
-                                                val col = (offset.x / cellWidthPx).toInt().coerceIn(0, periods.lastIndex)
-                                                dragStartIndex = col
-                                                dragEndIndex = col
-                                            },
-                                            onHorizontalDrag = { change, _ ->
-                                                if (draggedTaskId == task.id) {
-                                                    val currentX = change.position.x
-                                                    val col = (currentX / cellWidthPx).toInt().coerceIn(0, periods.lastIndex)
-                                                    if (col != dragEndIndex) {
-                                                        dragEndIndex = col
-                                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                                    }
-                                                }
-                                            },
-                                            onDragEnd = {
-                                                if (draggedTaskId == task.id) {
-                                                    val start = minOf(dragStartIndex, dragEndIndex)
-                                                    val end = maxOf(dragStartIndex, dragEndIndex)
-                                                    val keys = (start..end).map { periods[it].key }
-                                                    onBatchMarkCells(task.id, keys, CellStatus.DONE)
-                                                }
-                                                draggedTaskId = null
-                                            },
-                                            onDragCancel = {
-                                                draggedTaskId = null
-                                            }
-                                        )
-                                    }
-                                } else Modifier
-                            ) {
-                                periods.forEachIndexed { colIndex, period ->
-                                    val isHighlighted = (draggedTaskId == task.id) &&
-                                            (colIndex in minOf(dragStartIndex, dragEndIndex)..maxOf(dragStartIndex, dragEndIndex))
-                                    val entry = cells[Pair(task.id, period.key)]
-
-                                    Box {
-                                        MatrixStatusCell(
-                                            entry = entry,
-                                            onToggle = { onToggleCell(task.id, period.key) },
-                                            onLongClick = { onCellLongClick(task.id, period.key) }
-                                        )
-
-                                        if (isHighlighted) {
-                                            Box(
-                                                modifier = Modifier
-                                                    .matchParentSize()
-                                                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.35f))
-                                                    .border(1.5.dp, MaterialTheme.colorScheme.primary)
-                                            )
-                                        }
-                                    }
-                                }
-
-                                val progress = taskCompletionPercentage[task.id] ?: 0f
-                                Box(
-                                    modifier = Modifier
-                                        .size(width = 48.dp, height = 44.dp)
-                                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f))
-                                        .border(0.5.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        text = "${progress.toInt()}%",
-                                        fontSize = 11.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.primary
-                                    )
-                                }
-                            }
+                item(key = "daily_total_summary") {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(36.dp)
+                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .width(155.dp)
+                                .height(36.dp)
+                                .border(0.5.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+                                .padding(horizontal = 8.dp),
+                            contentAlignment = Alignment.CenterStart
+                        ) {
+                            Text(
+                                text = stringResource(R.string.daily_total),
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                         }
 
+                        Box(
+                            modifier = Modifier
+                                .width(1.5.dp)
+                                .fillMaxHeight()
+                                .background(MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
+                        )
+
                         Row(
-                            modifier = Modifier.background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+                            modifier = Modifier
+                                .weight(1f)
+                                .horizontalScroll(horizontalScrollState)
                         ) {
                             periods.forEach { period ->
                                 val percentage = periodCompletionPercentage[period.key] ?: 0f
