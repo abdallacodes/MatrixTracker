@@ -1,3 +1,30 @@
+# ==============================================================================
+# MatrixTracker Build & Test CI/CD Workflow
+# ==============================================================================
+# 🔐 Keystore Persistence Setup Instructions:
+# To prevent "App not installed" update failures caused by signature mismatches,
+# do NOT dynamically generate a new keystore on every CI run.
+#
+# Follow these 3 steps ONCE to set up a persistent release signing key:
+#
+# Step 1: Generate a release keystore locally on your developer machine:
+#   keytool -genkeypair -v -keystore release.keystore -alias matrixreleasekey \
+#     -keyalg RSA -keysize 2048 -validity 10000 -storepass YourPassword123 -keypass YourPassword123
+#
+# Step 2: Encode the keystore to Base64 format:
+#   - Linux/macOS:
+#       base64 -w 0 release.keystore > keystore_base64.txt
+#   - Windows PowerShell:
+#       [Convert]::ToBase64String([IO.File]::ReadAllBytes("release.keystore")) > keystore_base64.txt
+#
+# Step 3: Add the following Repository Secrets in GitHub:
+#   GitHub Repo -> Settings -> Secrets and variables -> Actions -> New repository secret:
+#     - RELEASE_KEYSTORE_BASE64   : Paste content of keystore_base64.txt
+#     - RELEASE_KEYSTORE_PASSWORD : YourPassword123
+#     - RELEASE_KEY_ALIAS        : matrixreleasekey
+#     - RELEASE_KEY_PASSWORD     : YourPassword123
+# ==============================================================================
+
 name: Build & Test MatrixTracker
 
 on:
@@ -33,14 +60,15 @@ jobs:
 
       - name: Setup Keystore
         env:
-          RELEASE_KEYSTORE_BASE64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
+          KEYSTORE_BASE64: ${{ secrets.RELEASE_KEYSTORE_BASE64 || secrets.KEYSTORE_BASE64 }}
         run: |
           mkdir -p ~/.android
-          if [ -n "$RELEASE_KEYSTORE_BASE64" ]; then
-            echo "$RELEASE_KEYSTORE_BASE64" | base64 -d > ~/.android/release.keystore
-            echo "Persistent release keystore successfully unpacked."
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "$KEYSTORE_BASE64" | base64 -d > ~/.android/release.keystore
+            echo "✅ Persistent release keystore successfully unpacked."
           else
-            echo "RELEASE_KEYSTORE_BASE64 secret is not set. A persistent keystore should be uploaded to repository secrets."
+            echo "⚠️ RELEASE_KEYSTORE_BASE64 / KEYSTORE_BASE64 secret is not set."
+            echo "   A persistent keystore should be uploaded to GitHub Secrets to ensure identical APK signatures across builds."
           fi
 
       - name: Make Gradlew Executable
@@ -52,9 +80,9 @@ jobs:
       - name: Build Release APK
         env:
           KEYSTORE_FILE: /home/runner/.android/release.keystore
-          KEYSTORE_PASSWORD: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
+          KEYSTORE_PASSWORD: ${{ secrets.RELEASE_KEYSTORE_PASSWORD || secrets.KEYSTORE_PASSWORD || secrets.STORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS || secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD || secrets.KEY_PASSWORD }}
         run: ./gradlew assembleRelease --stacktrace
 
       - name: Upload Release APK Artifact

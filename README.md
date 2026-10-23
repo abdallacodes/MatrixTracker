@@ -21,7 +21,8 @@
   - Full structured JSON backup and restore.
 - **Printable PDF Generator**: Renders standard A4 Landscape printable PDFs with print-friendly monochrome symbols and system Print Spooler / Wi-Fi printer integration.
 - **Jetpack Glance Home Screen Widget**: Interactive widget displaying today's habits with single-tap background quick-checks.
-- **Dark & Light Jewel Tone Palette**: Theme-aware contrast colors for crisp visibility under both light and dark themes.
+- **Dark, Light & Modern AMOLED Themes**: Pitch-black `#000000` AMOLED theme with vibrant neon emerald, cyan, and crimson cell states.
+- **Dynamic In-App Arabic Localization**: Full RTL layout and Arabic translation support with instant in-app locale switching.
 
 ---
 
@@ -33,7 +34,7 @@
 - **State Management**: Reactive `StateFlow` and Clean Architecture Repository pattern
 - **Home Widget**: Jetpack Glance 1.2 (`glance-appwidget` & `glance-material3`)
 - **PDF Rendering**: Native Android `PdfDocument` & `PrintManager` integration
-- **Testing**: JUnit 4, Robolectric 4.17, and Coroutines Test (`28 unit tests passing`)
+- **Testing**: JUnit 4, Robolectric 4.17, and Coroutines Test (`31 unit tests passing`)
 
 ---
 
@@ -61,6 +62,55 @@ The compiled APK will be located at:
 ```
 The optimized release APK will be located at:
 `app/build/outputs/apk/release/app-release.apk`
+
+---
+
+## 🔐 CI/CD Keystore Persistence & Release Guide
+
+To prevent Android's **"App not installed"** error during in-place APK updates, two requirements are strictly enforced:
+
+### 1. Consistent Release Signing Keystore
+Android rejects updates if the new APK's SHA-256 certificate signature differs from the installed APK. Follow these 3 steps ONCE to configure a persistent signing key in GitHub Actions:
+
+#### Step 1: Generate a Keystore Locally
+Run the following command on your local terminal:
+```bash
+keytool -genkeypair -v -keystore release.keystore -alias matrixreleasekey \
+  -keyalg RSA -keysize 2048 -validity 10000 -storepass YourPassword123 -keypass YourPassword123
+```
+
+#### Step 2: Convert Keystore to Base64
+- **Linux / macOS**:
+  ```bash
+  base64 -w 0 release.keystore > keystore_base64.txt
+  ```
+- **Windows PowerShell**:
+  ```powershell
+  [Convert]::ToBase64String([IO.File]::ReadAllBytes("release.keystore")) > keystore_base64.txt
+  ```
+
+#### Step 3: Add Repository Secrets in GitHub
+Go to **GitHub Repository Settings → Secrets and variables → Actions → New repository secret**:
+- `RELEASE_KEYSTORE_BASE64` : Paste content of `keystore_base64.txt`
+- `RELEASE_KEYSTORE_PASSWORD` : `YourPassword123`
+- `RELEASE_KEY_ALIAS` : `matrixreleasekey`
+- `RELEASE_KEY_PASSWORD` : `YourPassword123`
+
+---
+
+### 2. Automated Version Code Auto-Increment
+Android rejects in-place updates if the new APK's `versionCode` is less than or equal to the currently installed version.
+
+When running `release.py`, the script automatically:
+1. Reads the current `versionCode` from `app/build.gradle.kts`.
+2. Increments `versionCode` by 1 (`versionCode = currentCode + 1`).
+3. Bumps `versionName` to match the calculated release tag (`v1.0.X`).
+4. Commits `app/build.gradle.kts`, tags the commit, and pushes to remote.
+
+To publish a new automated release:
+```bash
+python release.py "feat: your release feature description"
+```
 
 ---
 
