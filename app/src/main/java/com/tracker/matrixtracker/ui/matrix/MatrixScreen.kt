@@ -103,8 +103,7 @@ private val ScreenRotationIcon: ImageVector
             viewportHeight = 24f
         ).apply {
             path(
-                fill = SolidColor(Color.Unspecified),
-                stroke = SolidColor(Color.Unspecified),
+                fill = SolidColor(Color.Black),
                 pathFillType = PathFillType.NonZero
             ) {
                 moveTo(16.48f, 2.52f)
@@ -536,7 +535,7 @@ fun MatrixScreen(
                                 Icon(
                                     imageVector = ScreenRotationIcon,
                                     contentDescription = stringResource(R.string.fullscreen_view),
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    tint = MaterialTheme.colorScheme.primary,
                                     modifier = Modifier.size(20.dp)
                                 )
                             }
