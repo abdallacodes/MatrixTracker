@@ -178,21 +178,7 @@ fun MatrixScreen(
         null -> ""
     }
 
-    val restoreFileLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
-    ) { uri ->
-        uri?.let {
-            runCatching {
-                val inputStream = context.contentResolver.openInputStream(it)
-                val jsonString = inputStream?.bufferedReader()?.use { reader -> reader.readText() }
-                if (!jsonString.isNullOrBlank()) {
-                    scope.launch {
-                        viewModel.restoreFromBackupJson(jsonString)
-                    }
-                }
-            }
-        }
-    }
+
 
     if (isLandscape) {
         Box(modifier = modifier.fillMaxSize()) {
@@ -378,6 +364,14 @@ fun MatrixScreen(
                                 onDismissRequest = { isOverflowMenuExpanded = false }
                             ) {
                                 DropdownMenuItem(
+                                    text = { Text(stringResource(R.string.manage_tasks)) },
+                                    onClick = {
+                                        isOverflowMenuExpanded = false
+                                        showTaskManagementDialog = true
+                                    }
+                                )
+
+                                DropdownMenuItem(
                                     text = { Text(stringResource(R.string.export_csv)) },
                                     onClick = {
                                         isOverflowMenuExpanded = false
@@ -398,30 +392,6 @@ fun MatrixScreen(
                                     onClick = {
                                         isOverflowMenuExpanded = false
                                         viewModel.shareBoardAsPdf(context)
-                                    }
-                                )
-
-                                DropdownMenuItem(
-                                    text = { Text(stringResource(R.string.backup_json)) },
-                                    onClick = {
-                                        isOverflowMenuExpanded = false
-                                        viewModel.createFullBackup(context)
-                                    }
-                                )
-
-                                DropdownMenuItem(
-                                    text = { Text(stringResource(R.string.restore_backup)) },
-                                    onClick = {
-                                        isOverflowMenuExpanded = false
-                                        restoreFileLauncher.launch("*/*")
-                                    }
-                                )
-
-                                DropdownMenuItem(
-                                    text = { Text(stringResource(R.string.manage_tasks)) },
-                                    onClick = {
-                                        isOverflowMenuExpanded = false
-                                        showTaskManagementDialog = true
                                     }
                                 )
                             }
