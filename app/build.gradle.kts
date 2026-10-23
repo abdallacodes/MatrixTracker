@@ -27,16 +27,25 @@ android {
     signingConfigs {
         create("release") {
             val envKeystore = System.getenv("KEYSTORE_FILE")?.takeIf { it.isNotBlank() }
-            val releaseKeystore = if (envKeystore != null) file(envKeystore) else file(System.getProperty("user.home") + "/.android/release.keystore")
-            val debugKeystore = file(System.getProperty("user.home") + "/.android/debug.keystore")
+            val projectKeystore = file("keystore/release.keystore")
+            val userHomeKeystore = file(System.getProperty("user.home") + "/.android/release.keystore")
 
-            if (releaseKeystore.exists()) {
-                storeFile = releaseKeystore
-                storePassword = System.getenv("KEYSTORE_PASSWORD")?.takeIf { it.isNotBlank() } ?: "android"
-                keyAlias = System.getenv("KEY_ALIAS")?.takeIf { it.isNotBlank() } ?: "matrixreleasekey"
-                keyPassword = System.getenv("KEY_PASSWORD")?.takeIf { it.isNotBlank() } ?: "android"
-            } else if (debugKeystore.exists()) {
-                storeFile = debugKeystore
+            val targetKeystore = when {
+                envKeystore != null && file(envKeystore).exists() -> file(envKeystore)
+                projectKeystore.exists() -> projectKeystore
+                userHomeKeystore.exists() -> userHomeKeystore
+                else -> null
+            }
+
+            if (targetKeystore != null) {
+                storeFile = targetKeystore
+                storePassword = System.getenv("KEYSTORE_PASSWORD")?.takeIf { it.isNotBlank() } ?: "matrixtracker"
+                keyAlias = System.getenv("KEY_ALIAS")?.takeIf { it.isNotBlank() } ?: "matrixtrackerkey"
+                keyPassword = System.getenv("KEY_PASSWORD")?.takeIf { it.isNotBlank() } ?: "matrixtracker"
+                enableV1Signing = true
+                enableV2Signing = true
+            } else {
+                storeFile = file(System.getProperty("user.home") + "/.android/debug.keystore")
                 storePassword = "android"
                 keyAlias = "androiddebugkey"
                 keyPassword = "android"
@@ -52,12 +61,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            val relConfig = signingConfigs.getByName("release")
-            if (relConfig.storeFile?.exists() == true) {
-                signingConfig = relConfig
-            } else {
-                signingConfig = signingConfigs.getByName("debug")
-            }
+            signingConfig = signingConfigs.getByName("release")
         }
     }
     compileOptions {
