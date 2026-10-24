@@ -24,31 +24,26 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
-    signingConfigs {
-        create("release") {
-            val envKeystore = System.getenv("KEYSTORE_FILE")?.takeIf { it.isNotBlank() }
-            val projectKeystore = file("keystore/release.keystore")
-            val userHomeKeystore = file(System.getProperty("user.home") + "/.android/release.keystore")
+    val envKeystore = System.getenv("KEYSTORE_FILE")?.takeIf { it.isNotBlank() }
+    val projectKeystore = file("keystore/release.keystore")
+    val userHomeKeystore = file(System.getProperty("user.home") + "/.android/release.keystore")
 
-            val targetKeystore = when {
-                envKeystore != null && file(envKeystore).exists() -> file(envKeystore)
-                projectKeystore.exists() -> projectKeystore
-                userHomeKeystore.exists() -> userHomeKeystore
-                else -> null
-            }
+    val targetKeystore = when {
+        envKeystore != null && file(envKeystore).exists() -> file(envKeystore)
+        projectKeystore.exists() -> projectKeystore
+        userHomeKeystore.exists() -> userHomeKeystore
+        else -> null
+    }
 
-            if (targetKeystore != null) {
+    if (targetKeystore != null) {
+        signingConfigs {
+            create("release") {
                 storeFile = targetKeystore
                 storePassword = System.getenv("KEYSTORE_PASSWORD")?.takeIf { it.isNotBlank() } ?: "matrixtracker"
                 keyAlias = System.getenv("KEY_ALIAS")?.takeIf { it.isNotBlank() } ?: "matrixtrackerkey"
                 keyPassword = System.getenv("KEY_PASSWORD")?.takeIf { it.isNotBlank() } ?: "matrixtracker"
                 enableV1Signing = true
                 enableV2Signing = true
-            } else {
-                storeFile = file(System.getProperty("user.home") + "/.android/debug.keystore")
-                storePassword = "android"
-                keyAlias = "androiddebugkey"
-                keyPassword = "android"
             }
         }
     }
@@ -61,7 +56,11 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            signingConfig = signingConfigs.getByName("release")
+            signingConfig = if (targetKeystore != null) {
+                signingConfigs.getByName("release")
+            } else {
+                signingConfigs.getByName("debug")
+            }
         }
     }
     compileOptions {
